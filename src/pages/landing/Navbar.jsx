@@ -3,15 +3,38 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg";
 import ProfilePic from "../../assets/user.svg";
 import { useAuth } from "../../contexts/authContext";
-import { truncateAddress } from "../../utils/truncateAddress";
+import { truncateWalletAddress } from "../../utils/truncateAddress";
 import Web3 from "web3";
+import { generateKYCToken } from "../../services/kycConfiguration";
+import axios from "axios"
+
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [address, setAddress] = useState("");
-  const { logout, user, connectToWallet, walletAddress, isWalletConnected } =
+  const [kycToken, setKYCtoken] = useState("");
+  const { logout, user, connectToWallet, walletAddress, isWalletConnected, address } =
     useAuth();
+
+    const getKYCtoken = async () => {
+      try {
+        const options = {
+          method: 'POST',
+          url: 'http://localhost:4000/api/getToken', // Specify your backend server endpoint
+          headers: {
+            'Content-Type': 'application/json', // Set content type to JSON
+          },
+          data: {
+            address: walletAddress, // Include the address in the request body
+          },
+        };
+    
+        const response = await axios(options);
+        console.log(response.data); // Log the response data from the backend
+      } catch (error) {
+        console.error("Error sending POST request:", error);
+      }
+    };
 
   return (
     <nav className="flex items-center justify-between  w-full">
@@ -26,7 +49,7 @@ function Navbar() {
         </Link>
       ) : (
         <div className="flex items-end gap-4 ">
-          {walletAddress !== null ? (
+          {address !== null ? (
             <div className="flex items-center gap-4 text-white">
               <Link to="/map">
                 <button className="w-[8.5vw] h-[3.3vh] text-base rounded-[7px] font-bold ">
@@ -39,13 +62,16 @@ function Navbar() {
                 </button>
               </Link>
               <Link to="/dashboard/1">
-                <button className="w-[8.5vw] h-[3.3vh] text-base rounded-[7px] font-bold ">
+                <button
+                  onClick={() => getKYCtoken()}
+                  className="w-[8.5vw] h-[3.3vh] text-base rounded-[7px] font-bold "
+                >
                   Dashboard
                 </button>
               </Link>
 
               <p className="text-base font-bold text-cyan-600 cursor-pointer">
-                {truncateAddress(walletAddress)}
+                {truncateWalletAddress(address)}
               </p>
               <img
                 src={ProfilePic}

@@ -20,105 +20,58 @@ import Settings from "./pages/dashboard/Settings";
 import { DashboardProvider } from "./contexts/dashboardContext";
 import BaseMap from "./pages/map/BaseMap";
 import abi from "./contractFIle/AssetRegistry.json";
-// Import the Web3 library
 import Web3 from "web3";
+import { SingleBaseMap } from "./lib/leaflets";
 
 function App() {
-  const [fetchingUser, setFetchingUser] = useState(true);
-  const [walletAccount, setWalletAccount] = useState(null);
+
+
   const auth = useAuth();
 
   useEffect(() => {
-    if (!window.ethereum) {
-      return;
-    }
-
     const accountWasChanged = (accounts) => {
-      auth.setAddress(accounts[0]);
-      console.log('accountWasChanged');
-    }
-    // const getAndSetAccount = async () => {
-    //   const changedAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    //   setWalletAccount(changedAccounts[0]);
-    //   console.log('getAndSetAccount');
-    // }
-    const clearAccount = () => {
-      auth.setAddress(null);
-      console.log('clearAccount');
+      console.log(accounts, "account....");
+      localStorage.setItem("walletAddress", accounts[0]);
+      // Assuming auth is defined elsewhere, changeAddress should be called on auth object
+      // auth.changeAddress();
     };
-
-    window.ethereum.on('accountsChanged', accountWasChanged);
-    // window.ethereum.on('connect', getAndSetAccount);
-    window.ethereum.on('disconnect', clearAccount);
-    window.ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
-      console.log('accounts', accounts);
-      // No need to set account here, it will be set by the event listener
-    }, error => {
-      // Handle any UI for errors here, e.g. network error, rejected request, etc.
-      // Set state as needed 
-    })
-
-    return () => {
-      // Return function of a non-async useEffect will clean up on component leaving screen, or from re-reneder to due dependency change
-      window.ethereum.off('accountsChanged', accountWasChanged);
-      window.ethereum.off('disconnect', clearAccount);
-    }
-  },[]);
-
-  useEffect(() => {
-    const { initUser, user, setUser, logout, connectToWallet } = auth;
-    const userObj = JSON.parse(localStorage.getItem("user"));
-
-    // auth.connectToWallet()
-
-    if (userObj) {
-      let expiryDate = new Date(userObj.auth?.expiryDate);
-      let todaysDate = new Date();
-      if (!user) {
-        setUser(userObj);
-      }
-
-      if (todaysDate > expiryDate) {
-        logout();
-      }
+  
+    const clearAccount = () => {
+      localStorage.removeItem("walletAddress");
+      // Assuming auth is defined elsewhere, setAddress should be called on auth object
+      // auth.setAddress(null);
+      console.log("clearAccount");
+    };
+  
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", accountWasChanged);
+      window.ethereum.on("disconnect", clearAccount);
+    
+      // Request accounts initially
+      window.ethereum
+        .request({ method: "eth_requestAccounts" })
+        .then((accounts) => {
+          console.log("Initial accounts:", accounts);
+          // No need to set account here, it will be set by the event listener
+        })
+        .catch((error) => {
+          console.error("Error requesting accounts:", error);
+          // Handle error appropriately
+        });
     } else {
+      console.warn("window.ethereum is not available");
+    
+    
     }
-    setFetchingUser(false);
-  }, [auth.user, auth.walletAddress]);
-
-  const [contractState, setContractState] = useState({
-    provider: null,
-    signer: null,
-    contract: null,
-  });
-
-  const [account, setAccount] = useState({});
-
-  const web3 = new Web3("https://node.ghostnet.etherlink.com");
-
-  const contractAddress = "0x5359bAe7654ED1C646d4E7d9801AD423bfc27DCf";
-
-  const contractInstance = new web3.eth.Contract(abi.abi, contractAddress);
-
-  const retrieveAllAssets = async () => {
-    try {
-      const assets = await contractInstance.methods.retrieveAllAsset().call();
-      console.log("Existing Assets:");
-      assets.forEach((asset) => {
-        console.log(
-          `Location: ${asset.location}, Description: ${
-            asset.description
-          }, Longitudes: [${asset.longitudes.join(
-            ", "
-          )}], Latitudes: [${asset.latitudes.join(
-            ", "
-          )}], Has Legal Document: ${asset.hasLegalDocument}`
-        );
-      });
-    } catch (error) {
-      console.error("Retrieve all assets error:", error);
-    }
-  };
+  
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.off("accountsChanged", accountWasChanged);
+        window.ethereum.off("disconnect", clearAccount);
+      }
+    };
+  }, []); // Empty dependency array because the functions are defined inside the useEffect
+  
 
   return (
     <DashboardProvider>
@@ -145,6 +98,14 @@ function App() {
               element={
                 <Dashboard>
                   <Rent />
+                </Dashboard>
+              }
+            />
+            <Route
+              path="/dashboard/5"
+              element={
+                <Dashboard>
+                  <SingleBaseMap />
                 </Dashboard>
               }
             />

@@ -3,10 +3,15 @@ import Step2 from "../assets/step2.svg";
 import { STATE } from "../utils/stateConstants";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-
+import Upload from "../assets/upload.svg";
+import { useMedia } from "../contexts/mediaContex";
+import MediaLoader from "./fileLoader";
 import { general_input_styles } from "../utils";
 import { label_styles } from "../utils";
 import { input_container_styles } from "../utils";
+import { pinFileToIpfs } from "../services/pinata";
+const formData = new FormData();
+
 
 export const ParcelStep = ({
   prevStep,
@@ -21,7 +26,39 @@ export const ParcelStep = ({
   const activateCartSystem = () => {
     setIsGeo(false);
   };
+  const {
+    cOf,
+    uploadCof,
+    surveyPlan,
+    uploadSurveyPlan,
+    uploadPropertyVisualization,
+    propertyVisualization,
+  } = useMedia();
+
   const [status, setStatus] = useState(STATE.IDLE);
+  const [ownerShipDoc, setOwnershipDoc] = useState();
+  const [assetImage, setAssetImage] = useState();
+  const [surveyPlanDoc, setSurveyPlan] = useState();
+
+  const saveOwnerShipDoc = (event) => {
+    setOwnershipDoc(event.target.files[0]);
+    uploadCof(event);
+  };
+  const saveAssetImage = (event) => {
+    setAssetImage(event.target.files[0]);
+    uploadPropertyVisualization(event);
+  };
+  const saveSurveyPlan = (event) => {
+    setSurveyPlan(event.target.files[0]);
+    uploadSurveyPlan(event);
+  };
+
+
+  formData.append("ownershipDoc", ownerShipDoc);
+  formData.append("surveyPlanDoc", surveyPlanDoc);
+  formData.append("assetImage", assetImage);
+
+
 
   const step2 = async (values, methods) => {
     setStatus(STATE.LOADING);
@@ -43,9 +80,11 @@ export const ParcelStep = ({
               { point4: { px: formik.values.px4, py: formik.values.py4 } },
             ],
           }),
-      area: formik.values.area,
-      address: formik.values.address,
-      landUse: formik.values.area || "null",
+      document: {
+        ownershipDocument:ownerShipDoc || '',
+        surveyPlanDocument:surveyPlanDoc || '',
+        assetImage:assetImage || ''
+      },
     };
 
     if (landParcelCurrentState) {
@@ -65,22 +104,16 @@ export const ParcelStep = ({
       py3: landParcelCurrentState?.geographicCoordinates?.[2]?.point3?.py || "",
       px4: landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.px || "",
       py4: landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.py || "",
-      area: landParcelCurrentState?.area || "",
-      address: landParcelCurrentState?.address || "",
-      landUse: landParcelCurrentState?.landUse || "",
     },
     validationSchema: Yup.object({
       px1: Yup.string().required("This field is required."),
       py1: Yup.string().required("This field is required."),
-      px2: Yup.string().required("This field is required."),
-      py2: Yup.string().required("This field is required."),
-      px3: Yup.string().required("This field is required."),
-      py3: Yup.string().required("This field is required."),
-      px4: Yup.string().required("This field is required."),
-      py4: Yup.string().required("This field is required."),
-      area: Yup.string().required("Area is required."),
-      address: Yup.string().required("Physical address is required."),
-      landUse: Yup.string().required("land use is required."),
+      px2: Yup.string().optional("This field is required."),
+      py2: Yup.string().optional("This field is required."),
+      px3: Yup.string().optional("This field is required."),
+      py3: Yup.string().optional("This field is required."),
+      px4: Yup.string().optional("This field is required."),
+      py4: Yup.string().optional("This field is required."),
     }),
     onSubmit: (values, methods) => {
       step2(values, methods);
@@ -90,6 +123,107 @@ export const ParcelStep = ({
   return (
     <div className="flex- flex-col">
       <img src={Step2} alt="step2" className="w-full" />
+      <div className="mt-[6.3704vh]">
+        <div className="text-zinc-400 text-xl font-bold leading-snug text-center">
+          Legal Documents
+        </div>
+        <div className="mt-6 flex flex-col gap-2">
+          <div>
+            <div className="flex flex-col gap-2 cursor-pointer">
+              <div className="text-zinc-400 text-base font-semibold leading-[0.9vw]">
+                Upload Asset Image
+              </div>
+              <div>
+                <label htmlFor="fileInput1" className="cursor-pointer">
+                  <div className="flex flex-col gap-2 justify-center items-center w-full h-[18.8889vh] bg-zinc-900 rounded-[10px] border border-zinc-400 border-dashed">
+                    <img src={Upload} alt="upload" className="w-[2.3vw]" />
+                    <div className="text-cyan-600 text-lg font-semibold underline leading-tight">
+                      Select a File to Upload
+                    </div>
+                    <div className="text-zinc-400 text-base font-normal leading-[0.9vw]">
+                      Or Drag and Drop it here
+                    </div>
+                  </div>
+                </label>
+                <input
+                  id="fileInput1"
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={saveAssetImage}
+                />
+              </div>
+            </div>
+
+            <div>
+              <MediaLoader media={propertyVisualization} />
+            </div>
+          </div>
+          <div>
+            <div className="flex flex-col gap-2 cursor-pointer">
+              <div className="text-zinc-400 text-base font-semibold leading-[0.9vw]">
+                Proof Of Ownership
+              </div>
+              <div>
+                <label htmlFor="fileInput2" className="cursor-pointer">
+                  <div className="flex flex-col gap-2 justify-center items-center w-full h-[18.8889vh] bg-zinc-900 rounded-[10px] border border-zinc-400 border-dashed">
+                    <img src={Upload} alt="upload" className="w-[2.3vw]" />
+                    <div className="text-cyan-600 text-lg font-semibold underline leading-tight">
+                      Select a File to Upload
+                    </div>
+                    <div className="text-zinc-400 text-base font-normal leading-[0.9vw]">
+                      Or Drag and Drop it here
+                    </div>
+                  </div>
+                </label>
+                <input
+                  id="fileInput2"
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={saveOwnerShipDoc}
+                />
+              </div>
+            </div>
+
+            <div>
+              <MediaLoader media={cOf} />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex flex-col gap-2 cursor-pointer">
+              <div className="text-zinc-400 text-base font-semibold leading-[0.9vw]">
+                Upload Survey Plan
+              </div>
+              <div>
+                <label htmlFor="fileInput3" className="cursor-pointer">
+                  <div className="flex flex-col gap-2 justify-center items-center w-full h-[18.8889vh] bg-zinc-900 rounded-[10px] border border-zinc-400 border-dashed">
+                    <img src={Upload} alt="upload" className="w-[2.3vw]" />
+                    <div className="text-cyan-600 text-lg font-semibold underline leading-tight">
+                      Select a File to Upload
+                    </div>
+                    <div className="text-zinc-400 text-base font-normal leading-[0.9vw]">
+                      Or Drag and Drop it here
+                    </div>
+                  </div>
+                </label>
+                <input
+                  id="fileInput3"
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={saveSurveyPlan}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </div>
+            </div>
+            <div>
+              <MediaLoader media={surveyPlan} />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="mt-[6.2037vh] text-zinc-400 text-xl font-bold text-center leading-snug">
         Spatial Attribute
       </div>
@@ -114,7 +248,7 @@ export const ParcelStep = ({
                   Cartesian Co-ordinates
                   <div
                     className={`${
-                      isGeo ? "bg-violet-500" : "bg-zinc-300 bg-opacity-40"
+                      isGeo ? "bg-cyan-600" : "bg-zinc-300 bg-opacity-40"
                     } w-[13.8542vw] h-1  rounded-[100px]`}
                   />
                 </div>
@@ -281,93 +415,22 @@ export const ParcelStep = ({
             </div>
           </div>
           {/* ... */}
-          <div className="mt-[6.3704vh]">
-            <div className="text-zinc-400 text-xl font-bold leading-snug text-center">
-              Non-Spatial Attribute
-            </div>
-            <div className="mt-6 flex flex-col gap-2">
-              <div className="flex flex-col">
-                <label
-                  htmlFor="area"
-                  className="mb-1 text-base font-bold text-[#B9B9B9]"
-                >
-                  Area (sqm)
-                </label>
-                <input
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  type="number"
-                  name="area"
-                  value={formik.values.area}
-                  className={general_input_styles}
-                />
-                {/* Display error message for area */}
-                {formik.touched.area && formik.errors.area && (
-                  <div className="text-red-600">{formik.errors.area}</div>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <label
-                  htmlFor="address"
-                  className="mb-1 text-base font-bold text-[#B9B9B9]"
-                >
-                  Physical Address
-                </label>
-                <input
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  type="text"
-                  name="address"
-                  value={formik.values.address}
-                  className={general_input_styles}
-                />
-                {/* Display error message for area */}
-                {formik.touched.address && formik.errors.address && (
-                  <div className="text-red-600">{formik.errors.address}</div>
-                )}
-              </div>
+        </div>
 
-              <div className={input_container_styles}>
-                <label htmlFor="landUse" className={label_styles}>
-                  Land Use
-                </label>
-                <select
-                  id="landUse"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.landUse}
-                  placeholder="Land Use"
-                  className={general_input_styles}
-                  name="landUse"
-                >
-                  <option value="nil">- Choose one - </option>
-                  <option value="Commercial">Commercial Land</option>
-                  <option value="Mixed">Mixed Land</option>
-                  <option value="Residential">Residential Land</option>
-                </select>
-                {/* Display error message for landUse */}
-                {formik.touched.landUse && formik.errors.landUse && (
-                  <div className="text-red-600">{formik.errors.landUse}</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Submit and Back buttons */}
-          <div className="flex justify-around mt-6 py-12">
-            <button
-              onClick={prevStep}
-              className="w-[8.2292vw] h-[4.3519vh] border border-cyan-600 bg-opacity-40 rounded-[10px]"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              className="w-[8.2292vw] h-[4.3519vh] bg-cyan-600 bg-opacity-40 rounded-[10px]"
-            >
-              Proceed
-            </button>
-          </div>
+        {/* Submit and Back buttons */}
+        <div className="flex justify-around mt-6 py-12">
+          <button
+            onClick={prevStep}
+            className="w-[8.2292vw] h-[4.3519vh] border border-cyan-600 bg-opacity-40 rounded-[10px]"
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            className="w-[8.2292vw] h-[4.3519vh] bg-cyan-600 bg-opacity-40 rounded-[10px]"
+          >
+            Proceed
+          </button>
         </div>
       </form>{" "}
     </div>

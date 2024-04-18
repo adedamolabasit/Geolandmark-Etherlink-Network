@@ -1,21 +1,30 @@
-import React, { useState, useEffect } from "react"
-import Step3 from "../assets/step3.svg"
-import { useNavigate } from "react-router-dom"
-import { STATE } from "../utils/stateConstants"
-import { registerLand } from "../services/landRegistry"
-import { toast } from "react-toastify"
-import { useFormik } from "formik"
-import * as Yup from "yup"
-import { RadioOne } from "../utils/promptButton"
-import { RadioTwo } from "../utils/promptButton"
-import Upload from "../assets/upload.svg"
-import { general_input_styles } from "../utils"
-import { label_styles } from "../utils"
-import { input_container_styles } from "../utils"
-import { useMedia } from "../contexts/mediaContex"
-import MediaLoader from "./fileLoader"
-import { uploadLangistryMedia } from "../utils/fileBase"
-import { uploadImages } from "../services/landRegistry"
+import React, { useState, useEffect } from "react";
+import Step3 from "../assets/step3.svg";
+import { useNavigate } from "react-router-dom";
+import { STATE } from "../utils/stateConstants";
+import { registerLand } from "../services/landRegistry";
+import { toast } from "react-toastify";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { RadioOne } from "../utils/promptButton";
+import { RadioTwo } from "../utils/promptButton";
+import Upload from "../assets/upload.svg";
+import { general_input_styles } from "../utils";
+import { label_styles } from "../utils";
+import { input_container_styles } from "../utils";
+import { useMedia } from "../contexts/mediaContex";
+import MediaLoader from "./fileLoader";
+import { uploadLangistryMedia } from "../utils/fileBase";
+import { uploadImages } from "../services/landRegistry";
+import { useProperty } from "../contexts/propertyContext";
+import { useAuth } from "../contexts/authContext";
+import { pinFileToIpfs } from "../services/pinata";
+import {
+  saveDataToPinata,
+  pinAssetOnIPFs,
+  retrieveDataFromPinata,
+  retrievePinnedData,
+} from "../services/pinata";
 
 export const LandOwnerShipStep = ({
   prevStep,
@@ -34,15 +43,31 @@ export const LandOwnerShipStep = ({
     surveyPlanMulter,
     imageMulter,
   } = useMedia();
+
   const [isNegotiable, setIsNegotiable] = useState(true);
 
   const [status, setStatus] = useState(STATE.IDLE);
+
+  const gateWayUrl = process.env.REACT_APP_PINATA_GATEWAY_URL;
+  const pinataGatewayToken = process.env.REACT_APP_PINATA_GATEWAY_TOKEN
+
+
+  const {
+    walletAddress,
+    createContractAsset,
+    saveOwnerOnchain,
+    saveParcelAssetOnchain,
+    address,
+    fetchDataByIpfsHash,
+    fetchAllData 
+    
+  } = useAuth();
 
   const negotiation = () => {
     setIsNegotiable((prevState) => !prevState);
   };
 
-  const step3 = async (values, methods) => {
+  const step3 = async (values, _methods) => {
     setStatus(STATE.LOADING);
     console.log(values, "hey");
     const userObj = {
@@ -58,76 +83,93 @@ export const LandOwnerShipStep = ({
       birthDate: formik.values.birthDate,
     };
 
- 
-      saveLandOwnershipData(userObj);
+    saveLandOwnershipData(userObj);
 
-    const formData = new FormData();
+    const parcelImageCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "parcelImage"
+    );
+    const ownerShipDocumentCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "parcelImage"
+    );
+    const surveyPlanCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "parcelImage"
+    );
 
-    // formData.append("cOf", cOfMulter);
-    // formData.append("surveyPlan", surveyPlanMulter);
-    formData.append("images", imageMulter);
-    // formData.append("title", ownershipCurrentState.title);
-    formData.append("planId", ownerCurrentState.planId);
-    console.log(userObj, "plds");
-    console.log(imageMulter, "imageMulter");
-
-    // formData.append("data", allData);
     const allData = {
       owner: { ...ownerCurrentState },
       landParcel: { ...landParcelCurrentState },
-      ownership: {  title: formik.values.title,
+      ownership: {
+        address: address,
+        title: formik.values.title,
         fullName: formik.values.fullName,
-        mail: formik.values.email,
-        phoneNum: formik.values.phoneContact,
-        description: formik.values.propertyDesc,
-        price: formik.values.propertyPrice,
-        isNegotiable: isNegotiable,
-        images: propertyVisualization,
+        sex: formik.values.sex,
+        emailAddress: formik.values.emailAddress,
+        mobileNumber: formik.values.mobileNumber,
         occupation: formik.values.occupation,
-        birthDate: formik.values.birthDate,},
+        dateOfBirth: formik.values.dateOfBirth,
+        placeOfBirth: formik.values.placeOfBirth,
+        country: formik.values.country,
+        stateOfOrigin: formik.values.stateOfOrigin,
+        legalIdentityNo: formik.values.legalIdentityNo,
+      },
+      file: {
+        parcelImage: `${gateWayUrl}/ipfs/${parcelImageCID}?pinataGatewayToken=${pinataGatewayToken}`,
+        ownerShipDocument: `${gateWayUrl}/ipfs/${ownerShipDocumentCID}?pinataGatewayToken=${pinataGatewayToken}`,
+        surveyPlan: `${gateWayUrl}/ipfs/${surveyPlanCID}?pinataGatewayToken=${pinataGatewayToken}`,
+      },
     };
-    console.log(allData,ownerCurrentState,"all...")
+
+    console.log(allData, "blue");
+    console.log(allData.landParcel.document.assetImage, "blue");
 
     try {
-      // const response = await registerLand(allData);
-      // await uploadImages(formData);
+      setStatus(STATE.LOADING);
 
-      // await uploadLangistryMedia(filebaseData);
+      a = await saveParcelAssetOnchain(allData);
+
+      
+      navigate("/marketplace");
+
       setStatus(STATE.SUCCESS);
-      navigate('/marketplace')
-      toast.success(response.data.message);
 
+
+      toast.success(response.data.message);
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "An Error has occured. Please try again."
-      );
+      toast.error(err || "An Error has occured. Please try again.");
       setStatus(STATE.ERROR);
     }
   };
-  useEffect(() => {}, [ownershipCurrentState]);
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
       title: ownershipCurrentState.title || "",
       fullName: ownershipCurrentState.fullName || "",
-      email: ownershipCurrentState.mail || "",
-      phoneContact: ownershipCurrentState.phoneNum || "",
-      propertyDesc: ownershipCurrentState.description || "",
-      propertyPrice: ownershipCurrentState.price || "",
+      emailAddress: ownershipCurrentState.emailAddress || "",
+      mobileNumber: ownershipCurrentState.mobileNumber || "",
       occupation: ownershipCurrentState.occupation || "",
-      birthDate: ownershipCurrentState.birthDate || "",
+      sex: ownershipCurrentState.sex || "",
+      dateOfBirth: ownershipCurrentState.dateOfBirth || "",
+      placeOfBirth: ownershipCurrentState.placeOfBirth || "",
+      country: ownershipCurrentState.country || "",
+      stateOfOrigin: ownershipCurrentState.stateOfOrigin || "",
+      legalIdentityNo: ownershipCurrentState.legalIdentityNo || "",
     },
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required."),
       fullName: Yup.string().required("Full Name is required."),
-      email: Yup.string().required("ownershipType is required."),
-      phoneContact: Yup.string().required("Phone contact is required."),
-      propertyDesc: Yup.string().required(
-        "Give more detailed descri[ption about the property]."
-      ),
-      propertyPrice: Yup.string().required("Enter the price."),
+      emailAddress: Yup.string().required("emailAddress is required."),
+      mobileNumber: Yup.string().required("Mobile number is required."),
       occupation: Yup.string().required("Your occupation."),
-      birthDate: Yup.string().required("Birtdate required"),
+      sex: Yup.string().required("Indicate your gender."),
+      dateOfBirth: Yup.string().required("dateOfBirth required"),
+      placeOfBirth: Yup.string().required("placeOfbirth required"),
+      country: Yup.string().required("country required"),
+      stateOfOrigin: Yup.string().required("state og origin required"),
+      legalIdentityNo: Yup.string().required("Identification number required"),
     }),
     onSubmit: (values, methods) => {
       step3(values, methods);
@@ -162,9 +204,9 @@ export const LandOwnerShipStep = ({
               name="title"
             >
               <option value="nil">- Choose - </option>
-              <option value="Commercial">Mr</option>
-              <option value="Mixed">Mrs</option>
-              <option value="Residential">Miss</option>
+              <option value="Mr">Mr</option>
+              <option value="Mrs">Mrs</option>
+              <option value="Miss">Miss</option>
             </select>
             {/* Display error message for landUse */}
             {formik.touched.title && formik.errors.title && (
@@ -184,7 +226,7 @@ export const LandOwnerShipStep = ({
               type="text"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              placeholder=" Full Name"
+              placeholder="Full Name"
               name="fullName"
               value={formik.values.fullName}
               className={general_input_styles}
@@ -195,7 +237,30 @@ export const LandOwnerShipStep = ({
           </div>
           <div>
             <label
-              htmlFor="email"
+              htmlFor="legalIdentityNo"
+              className="mb-1 text-base  font-bold text-[#B9B9B9]"
+            >
+              Legal Identity Number.
+            </label>
+            <input
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="Identity Number"
+              name="legalIdentityNo"
+              value={formik.values.legalIdentityNo}
+              className={general_input_styles}
+            />
+            {formik.touched.legalIdentityNo &&
+              formik.errors.legalIdentityNo && (
+                <div className="text-red-600">
+                  {formik.errors.legalIdentityNo}
+                </div>
+              )}
+          </div>
+          <div>
+            <label
+              htmlFor="emailAddress"
               className="mb-1 text-base  font-bold text-[#B9B9B9]"
             >
               E-mail Address
@@ -205,102 +270,57 @@ export const LandOwnerShipStep = ({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               placeholder="Email"
-              name="email"
-              value={formik.values.email}
+              name="emailAddress"
+              value={formik.values.emailAddress}
               className={general_input_styles}
             />
-            {formik.touched.email && formik.errors.email && (
-              <div className="text-red-600">{formik.errors.email}</div>
+            {formik.touched.emailAddress && formik.errors.emailAddress && (
+              <div className="text-red-600">{formik.errors.emailAddress}</div>
             )}
           </div>
           <div>
             <label
-              htmlFor="phoneContact"
+              htmlFor="mobileNumber"
               className="mb-1 text-base  font-bold text-[#B9B9B9]"
             >
-              Phone No.
+              Mobile Number.
             </label>
             <input
               type="text"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              placeholder="Phone No."
-              name="phoneContact"
-              value={formik.values.phoneContact}
+              placeholder="Mobile Number"
+              name="mobileNumber"
+              value={formik.values.mobileNumber}
               className={general_input_styles}
             />
-            {formik.touched.phoneContact && formik.errors.phoneContact && (
-              <div className="text-red-600">{formik.errors.phoneContact}</div>
+            {formik.touched.mobileNumber && formik.errors.mobileNumber && (
+              <div className="text-red-600">{formik.errors.mobileNumber}</div>
             )}
           </div>
-        </div>
-        <div className="mt-8 text-zinc-400 text-xl font-bold leading-snug text-center">
-          Elaborate Property Details
-        </div>
-        <div className="flex flex-col w-full mt-4 gap-[4.1667vh]">
           <div>
             <label
-              htmlFor="propertyPrice"
+              htmlFor="occupation"
               className="mb-1 text-base  font-bold text-[#B9B9B9]"
             >
-              Value (₦)
+              Occupation.
             </label>
             <input
-              type="number"
+              type="text"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              placeholder=" Property price"
-              name="propertyPrice"
-              value={formik.values.propertyPrice}
+              placeholder="Occupation"
+              name="occupation"
+              value={formik.values.occupation}
               className={general_input_styles}
             />
-            {formik.touched.propertyPrice && formik.errors.propertyPrice && (
-              <div className="text-red-600">{formik.errors.propertyPrice}</div>
-            )}
-          </div>
-          <div>
-            <label
-              htmlFor="propertyDesc"
-              className="mb-1 text-base  font-bold text-[#B9B9B9]"
-            >
-              Property Description
-            </label>
-            <textarea
-              type="text"
-              placeholder=" Property Description"
-              name="propertyDesc"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.propertyDesc}
-              className={`w-full h-[16.2037vh] rounded-[10px] text-black`}
-            ></textarea>
-            {formik.touched.propertyDesc && formik.errors.propertyDesc && (
-              <div className="text-red-600">{formik.errors.propertyDesc}</div>
+            {formik.touched.occupation && formik.errors.occupation && (
+              <div className="text-red-600">{formik.errors.occupation}</div>
             )}
           </div>
         </div>
-        <div className="mt-4">
-          <div className="flex gap-4 items-center">
-            <div className="text-zinc-400 text-base font-semibold leading-[17.12px]">
-              Negotiable?
-            </div>
-            <div
-              onClick={negotiation}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              {isNegotiable ? <RadioOne /> : <RadioTwo />}
-              <p>Yes</p>
-            </div>
-            <div
-              onClick={negotiation}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              {!isNegotiable ? <RadioOne /> : <RadioTwo />}
-              <p>No</p>
-            </div>
-          </div>
-        </div>
-        <div className="mt-12">
+
+        {/* <div className="mt-12">
           <div className="flex flex-col gap-2 cursor-pointer">
             <div className="text-zinc-400 text-base font-semibold leading-[0.9vw]">
               Upload imgaes
@@ -328,64 +348,124 @@ export const LandOwnerShipStep = ({
             </div>
           </div>
           <MediaLoader media={propertyVisualization} />
-        </div>
+        </div> */}
 
         <div className="w-full flex mt-6 flex-wrap justify-between gap-2 ">
           <div className="w-[14vw]">
             <label
-              htmlFor="occupation"
+              htmlFor="sex"
               className="mb-1 text-base  font-bold text-[#B9B9B9]"
             >
-              Occupation
+              Gender
             </label>
             <input
               type="text"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              placeholder=" Occupation"
-              name="occupation"
-              value={formik.values.occupation}
+              placeholder="Indicate your gender"
+              name="sex"
+              value={formik.values.sex}
               className={general_input_styles}
             />
             <div
               className={`${
-                formik.touched.occupation && formik.errors.occupation
+                formik.touched.sex && formik.errors.sex
                   ? "inline-block text-red-600"
                   : "hidden"
               } `}
             >
-              {formik.touched.occupation &&
-                formik.errors.occupation &&
-                formik.errors.occupation}
+              {formik.touched.sex && formik.errors.sex && formik.errors.sex}
             </div>
           </div>
           <div className="w-[14vw]">
             <label
-              htmlFor="BirthDate"
+              htmlFor="dateOfDate"
               className="mb-1 text-base  font-bold text-[#B9B9B9]"
             >
-              Birth Date
+              Date of Birth
             </label>
             <input
               type="date"
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              name="birthDate"
+              name="dateOfBirth"
               placeholder=" Title"
-              value={formik.values.birthDate}
+              value={formik.values.dateOfBirth}
               className={general_input_styles}
             />
             <div
               className={`${
-                formik.touched.birthDate && formik.errors.birthDate
+                formik.touched.dateOfBirth && formik.errors.dateOfBirth
                   ? "inline-block text-red-600"
                   : "hidden"
               } `}
             >
-              {formik.touched.birthDate &&
-                formik.errors.birthDate &&
-                formik.errors.birthDate}
+              {formik.touched.dateOfBirth &&
+                formik.errors.dateOfBirth &&
+                formik.errors.dateOfBirth}
             </div>
+          </div>
+        </div>
+        <div className="flex flex-col w-full mt-8 gap-[2.1667vh]">
+          <div>
+            <label
+              htmlFor="placeOfBirth"
+              className="mb-1 text-base  font-bold text-[#B9B9B9]"
+            >
+              Place of Birth.
+            </label>
+            <input
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="Place of Birth"
+              name="placeOfBirth"
+              value={formik.values.placeOfBirth}
+              className={general_input_styles}
+            />
+            {formik.touched.placeOfBirth && formik.errors.placeOfBirth && (
+              <div className="text-red-600">{formik.errors.placeOfBirth}</div>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="stateOfOrigin"
+              className="mb-1 text-base  font-bold text-[#B9B9B9]"
+            >
+              State of Origin.
+            </label>
+            <input
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="State of Origin"
+              name="stateOfOrigin"
+              value={formik.values.stateOfOrigin}
+              className={general_input_styles}
+            />
+            {formik.touched.stateOfOrigin && formik.errors.stateOfOrigin && (
+              <div className="text-red-600">{formik.errors.stateOfOrigin}</div>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="country"
+              className="mb-1 text-base  font-bold text-[#B9B9B9]"
+            >
+              Country.
+            </label>
+            <input
+              type="text"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="Nationality"
+              name="country"
+              value={formik.values.country}
+              className={general_input_styles}
+            />
+            {formik.touched.country && formik.errors.country && (
+              <div className="text-red-600">{formik.errors.country}</div>
+            )}
           </div>
         </div>
         <div className="flex justify-around mt-6 py-12">

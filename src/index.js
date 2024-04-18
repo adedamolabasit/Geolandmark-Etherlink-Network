@@ -11,6 +11,9 @@ import { PropertyProvider } from "./contexts/propertyContext";
 import { AuthProvider } from "./contexts/authContext";
 import { StepperProvider } from "./contexts/stepperContext";
 import { MediaProvider } from "./contexts/mediaContex";
+import dotenv from 'dotenv'; // Import dotenv
+
+dotenv.config();
 
 
 const isSmallAndMedium = window.matchMedia("(max-width: 1024px)").matches;

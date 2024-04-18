@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Index from "./Index";
 import vec from "../../assets/vec.svg";
 import { useFormik } from "formik";
@@ -13,7 +13,8 @@ import EyeHide from "../../assets/eyeslash.svg";
 import EyeUnhide from "../../assets/eye.svg";
 import Messages from "../../assets/messages1.svg";
 import { Link } from "react-router-dom";
-
+import SumsubWebSdk from "@sumsub/websdk-react";
+import snsWebSdk from "@sumsub/websdk";
 
 export default function AppSignIn() {
   const navigate = useNavigate();
@@ -71,6 +72,8 @@ export default function AppSignIn() {
 
   return (
     <Index path={path}>
+      <div id="sumsub-websdk-container"></div>
+
       <div className="flex flex-col text-white justify-center items-center">
         <h2 className="text-2xl font-black">Log In!</h2>
         <img src={vec} alt="" className="mt-2 w-[10.52vw] h-[1.94vh] " />
@@ -84,16 +87,16 @@ export default function AppSignIn() {
           onChange={formik.handleChange}
           className="flex flex-col mt-4 gap-6 items-center"
         >
-          <div className="flex flex-col justify-around items-center h-[35vh]  ">
-            <div className="flex flex-col w-[28.176vw]">
-              <label
-                htmlFor="email"
-                className="mb-1 text-base  font-bold text-[#B9B9B9]"
-              >
-                E-mail Address
-              </label>
-              <div
-                className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
+          <div className="flex flex-col gap-4 justify-around items-center h-[35vh]  ">
+              <div className="flex flex-col w-[28.176vw]">
+                <label
+                  htmlFor="email"
+                  className="mb-1 text-base  font-bold text-[#B9B9B9]"
+                >
+                  E-mail Address
+                </label>
+                <div
+                  className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
                   ${
                     !formik.errors?.email && formik.touched?.email
                       ? "focus:border-cyan-600"
@@ -104,78 +107,187 @@ export default function AppSignIn() {
                         ? "border-[#C63737] border-[1.5px]"
                         : "border-[rgba(18,18,18,0.3)]"
                     }`}
-              >
-                <img src={Messages} alt="" className="w-[1.25vw] " />
-
-                <input
-                  id="first_name"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="E-mail Address"
-                  type="email"
-                  name="email"
-                  className={`py-2 rounded-lg bg-zinc-300 w-[25vw] text-black
-                `}
-                  style={{ outline: "none" }}
-                />
-              </div>
-              <div
-                className={`${
-                  formik.touched.email && formik.errors.email
-                    ? "inline-block text-red-600"
-                    : "hidden"
-                } `}
-              >
-                {formik.touched.email &&
-                  formik.errors.email &&
-                  formik.errors.email}
-              </div>
-            </div>
-
-            <div className="relative flex flex-col w-[28.176vw]">
-              <label
-                htmlFor="password"
-                className="mb-1 text-lg  font-bold text-[#B9B9B9]"
-              >
-                Password.
-              </label>
-              <div
-                className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
-                   `}
-              >
-                <img src={Lock} alt="" className="w-[1.25vw] " />
-                <input
-                  required
-                  id="password"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Password."
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  className="py-2 rounded-lg bg-zinc-300 w-[23vw] text-black"
-                  style={{ outline: "none" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  <img
-                    src={showPassword ? EyeHide : EyeUnhide}
-                    alt=""
-                    className="w-[1.65vw]"
+                  <img src={Messages} alt="" className="w-[1.25vw] " />
+
+                  <input
+                    id="first_name"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="E-mail Address"
+                    type="email"
+                    name="email"
+                    className={`py-2 rounded-lg bg-zinc-300 w-[25vw] text-black
+                `}
+                    style={{ outline: "none" }}
                   />
-                </button>
+                </div>
+                <div
+                  className={`${
+                    formik.touched.email && formik.errors.email
+                      ? "inline-block text-red-600"
+                      : "hidden"
+                  } `}
+                >
+                  {formik.touched.email &&
+                    formik.errors.email &&
+                    formik.errors.email}
+                </div>
               </div>
 
-              <div className="self-end mt-2 text-cyan-600 text-base font-medium leading-snug">
-                Forgot Your Password?
-              </div>
-              <Link to="http://localhost:7000/v1/auth/google" className="button-cursor">
-                <div className="self-end mt-2 text-cyan-600 text-base font-medium leading-snug">
-                  signon with google
+              <div className="relative flex flex-col w-[28.176vw]">
+                <label
+                  htmlFor="password"
+                  className="mb-1 text-lg  font-bold text-[#B9B9B9]"
+                >
+                  Password.
+                </label>
+                <div
+                  className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
+                   `}
+                >
+                  <img src={Lock} alt="" className="w-[1.25vw] " />
+                  <input
+                    required
+                    id="password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="Password."
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    className="py-2 rounded-lg bg-zinc-300 w-[23vw] text-black"
+                    style={{ outline: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <img
+                      src={showPassword ? EyeHide : EyeUnhide}
+                      alt=""
+                      className="w-[1.65vw]"
+                    />
+                  </button>
                 </div>
-              </Link>
-            </div>
+              </div>
+              <div className="flex flex-col w-[28.176vw]">
+                <label
+                  htmlFor="email"
+                  className="mb-1 text-base  font-bold text-[#B9B9B9]"
+                >
+                  E-mail Address
+                </label>
+                <div
+                  className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
+                  ${
+                    !formik.errors?.email && formik.touched?.email
+                      ? "focus:border-cyan-600"
+                      : ""
+                  }
+                    ${
+                      formik.errors?.email && formik.touched?.email
+                        ? "border-[#C63737] border-[1.5px]"
+                        : "border-[rgba(18,18,18,0.3)]"
+                    }`}
+                >
+                  <img src={Messages} alt="" className="w-[1.25vw] " />
+
+                  <input
+                    id="first_name"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="E-mail Address"
+                    type="email"
+                    name="email"
+                    className={`py-2 rounded-lg bg-zinc-300 w-[25vw] text-black
+                `}
+                    style={{ outline: "none" }}
+                  />
+                </div>
+                <div
+                  className={`${
+                    formik.touched.email && formik.errors.email
+                      ? "inline-block text-red-600"
+                      : "hidden"
+                  } `}
+                >
+                  {formik.touched.email &&
+                    formik.errors.email &&
+                    formik.errors.email}
+                </div>
+              </div>
+
+              <div className="relative flex flex-col w-[28.176vw]">
+                <label
+                  htmlFor="password"
+                  className="mb-1 text-lg  font-bold text-[#B9B9B9]"
+                >
+                  Password.
+                </label>
+                <div
+                  className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
+                   `}
+                >
+                  <img src={Lock} alt="" className="w-[1.25vw] " />
+                  <input
+                    required
+                    id="password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="Password."
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    className="py-2 rounded-lg bg-zinc-300 w-[23vw] text-black"
+                    style={{ outline: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <img
+                      src={showPassword ? EyeHide : EyeUnhide}
+                      alt=""
+                      className="w-[1.65vw]"
+                    />
+                  </button>
+                </div>
+              </div>
+              <div className="relative flex flex-col w-[28.176vw]">
+                <label
+                  htmlFor="password"
+                  className="mb-1 text-lg  font-bold text-[#B9B9B9]"
+                >
+                  Password.
+                </label>
+                <div
+                  className={`flex w-[28.176vw] justify-around rounded-lg bg-zinc-300 h-[5.91vh]
+                   `}
+                >
+                  <img src={Lock} alt="" className="w-[1.25vw] " />
+                  <input
+                    required
+                    id="password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    placeholder="Password."
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    className="py-2 rounded-lg bg-zinc-300 w-[23vw] text-black"
+                    style={{ outline: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <img
+                      src={showPassword ? EyeHide : EyeUnhide}
+                      alt=""
+                      className="w-[1.65vw]"
+                    />
+                  </button>
+                </div>
+              </div>
+
           </div>
           <div className="flex flex-col justify-center items-center gap-2">
             <button
