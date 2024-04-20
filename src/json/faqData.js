@@ -19,9 +19,9 @@ const faqData = [
   },
   {
     id: 4,
-    question: "Can I list my land for sale or rent on GeoLandmark?",
+    question: "Can I tokenize my land asset and list it for sale or rent on Etherlink",
     answer:
-      "Yes, that's one of the many benefits of GeoLandmark. You can list your land for sale or rent on our platform. We also offer a range of services to help you find the right buyer or tenant for your land.",
+      "Absolutely. Etherlink provides a platform for landowners to tokenize their assets and list them for sale or rent as digital tokens. This process enhances market accessibility and facilitates efficient transactions within a decentralized ecosystem..",
   },
 ];
 

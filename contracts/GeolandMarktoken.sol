@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract GeolandMarkToken is ERC721, ERC721URIStorage, ERC721Burnable, Ownable {
     constructor(address initialOwner)
-        ERC721("MyToken", "MTK")
+        ERC721("GeoToken", "GTK")
         Ownable(initialOwner)
     {}
 

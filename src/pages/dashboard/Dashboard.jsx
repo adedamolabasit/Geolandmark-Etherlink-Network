@@ -5,6 +5,10 @@ import { useStepper } from "../../contexts/stepperContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Modal } from "../../utils/arrayLists";
+import Prompt from "../auth/Prompt";
+import { useAuth } from "../../contexts/authContext";
+import LoadingSpinner from "../../utils/spinner";
+import { STATE } from "../../utils/stateConstants";
 
 function Dashboard({ children }) {
   const { stepper } = useStepper();
@@ -16,31 +20,39 @@ function Dashboard({ children }) {
   useEffect(() => {
     window.scrollTo(2, 3);
   }, [stepper]);
+  const { onChainData, isTxn, status } = useAuth();
+
+
+  console.log("soyinka", onChainData);
 
   return (
-    <div className="w-screen h-screen bg-[#1B1B1B] flex  py-[4.6296vh] px-[4.1667vh] gap-[2.0833vw] text-[#B0B0B0]">
-      <div className="bg-[#0D0D0D] px-[1.0417vw] pt-[5.2778vh] pb-[5.9259vh] rounded-[20px] ">
-        <Sidebar />
-      </div>
-      <div className=" flex flex-col w-full">
+    <>
+      {status === STATE.LOADING ? (
+        <div className="relaive w-screen h-screen">
+          <LoadingSpinner />
+        </div>
+      ) :
+        <div className="relaive w-screen h-screen bg-[#1B1B1B] flex  py-[4.6296vh] px-[4.1667vh] gap-[2.0833vw] text-[#B0B0B0]">
+          <div className="bg-[#0D0D0D] px-[1.0417vw] pt-[5.2778vh] pb-[5.9259vh] rounded-[20px] ">
+            <Sidebar />
+          </div>
+          <div className=" flex flex-col w-full">
+            <Header />
 
-       
- 
-        <Header />
-
-        <div className="relative w-full overflow-y-auto ">
-          <div>{children}</div>
-          {/* <Modal
+            <div className="relative w-full overflow-y-auto ">
+              {status !== STATE.LOADING && <div>{children}</div>}
+              {/* <Modal
             handleSelection={handleZoneCat}
             arrayState={zoneCategory}
             setArrayState={setZoneCategory}
             listedData={["a", "b","c..........."]}
           /> */}
+            </div>
+          </div>
+          <ToastContainer />
         </div>
-      </div>
-      <ToastContainer />
-
-    </div>
+      }
+    </>
   );
 }
 

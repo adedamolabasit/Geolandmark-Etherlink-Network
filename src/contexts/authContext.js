@@ -1,7 +1,9 @@
 import { useState, useContext, createContext, useEffect, useRef } from "react";
 import Web3 from "web3";
-import abi from "../contractFIle/AssetRegistry.json";
+import abi1 from "../contractFIle/AssetRegistry.json";
+import abi2 from "../contractFIle/GeoToken.json";
 import { pinAssetOnIPFs, retrieveDataFromPinata } from "../services/pinata";
+import { STATE } from "../utils/stateConstants";
 
 const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
@@ -11,37 +13,30 @@ export const AuthProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState(null);
   const walletAddressRef = useRef(null);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [isTxn, setIsTxn] = useState(false);
+  const [onChainData, setOnchainData] = useState();
+  const [status, setStatus] = useState(STATE.IDLE);
+
+  const handleStatus = (state) => {
+    setStatus(state);
+  };
+
+  const onChainStatus = (status) => {
+    setIsTxn(status);
+  };
+  const handleChainData = (data) => {
+    setOnchainData(data);
+  };
 
   const web3 = new Web3(window.ethereum);
 
-  walletAddressRef.current = localStorage.getItem("walletAddress");
+  walletAddressRef.current = walletAddress;
 
   const changeAddress = () => {
-    walletAddressRef.current = localStorage.getItem("walletAddress");
-  }
+    walletAddressRef.current = walletAddress;
+  };
 
-  const initUser = async (data) => {
-    setUser(data.user);
-    setToken(data.auth);
-    runLogoutTimer(data.auth.expiryInSeconds * 1000);
-    data.auth.expiryDate =
-      new Date().getTime() + data.auth.expiryInSeconds * 1000;
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        ...data,
-      })
-    );
-  };
-  function runLogoutTimer(time) {
-    setTimeout(() => {
-      logout();
-    }, time);
-  }
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-  };
+
   const setAddress = (address) => {
     setWalletAddress(address);
   };
@@ -49,8 +44,11 @@ export const AuthProvider = ({ children }) => {
   const assetContractAddress = process.env.REACT_APP_ASSET_CONTRACT_ADDRESS;
   const nftContractAddress = process.env.REACT_APP_NFT_CONTRACT_ADDRESS;
 
-  const contractInstance1 = new web3.eth.Contract(abi.abi, assetContractAddress);
-  const contractInstance2 = new web3.eth.Contract(abi.abi, nftContractAddress);
+  const contractInstance1 = new web3.eth.Contract(
+    abi1.abi,
+    assetContractAddress
+  );
+  const contractInstance2 = new web3.eth.Contract(abi2.abi, nftContractAddress);
 
   const saveParcelAssetOnchain = async (data) => {
     const ipfs = await pinAssetOnIPFs(data);
@@ -67,93 +65,130 @@ export const AuthProvider = ({ children }) => {
         .send({ from: data.ownership.address, type: 0 });
 
       console.log("Transaction sent:", tx);
-      return tx; 
+      return tx;
     } catch (error) {
       console.error("Error sending transaction:", error);
-      throw error; 
+      throw error;
     }
   };
 
-  const fetchDataByParcelId = async  (address, hash) => {
+  const fetchDataByParcelId = async (address, parcelId) => {
+    handleStatus(STATE.LOADING);
     try {
-      const result = await contractInstance1.methods.getParcelByParcelId(address, hash).call();  
-
-      const data = await retrieveDataFromPinata(result.ipfsHash)
+      const result = await contractInstance1.methods
+        .getParcelByParcelId(address, parcelId)
+        .call();
+      const data = await retrieveDataFromPinata(result.ipfsHash);
+      handleStatus(STATE.SUCCESS);
 
       return data;
+    } catch (error) {
+      console.error("Error fetching data from blockchain:", error);
+      handleStatus(STATE.ERROR);
 
+      throw error;
+    }
+  };
+  const fetchIpfsHashByParcelId = async (address, parcelId) => {
+    try {
+      const result = await contractInstance1.methods
+        .getSingleParcelIpfsHash(address, parcelId)
+        .call();
+
+      return result;
     } catch (error) {
       console.error("Error fetching data from blockchain:", error);
       throw error;
     }
-  }
+  };
 
-  const mintGeoToken = async (data) => {
-    const ipfs = await pinAssetOnIPFs(data);
+  const mintGeoToken = async (address, parcelId) => {
+    console.log(">>>>>>");
+
     try {
-      const tx = await contractInstance1.methods
-        .saveParcelInformation(
-          data.ownership.address,
-          data.owner.parcelNumber,
-          ipfs.Timestamp,
-          ipfs.IpfsHash,
-          false,
-          `https://${ipfs.IpfsHash}`
-        )
-        .send({ from: data.ownership.address, type: 0 });
+      const cid = await fetchIpfsHashByParcelId(address, parcelId);
+      const url = `${process.env.REACT_APP_PINATA_GATEWAY_URL}/ipfs/${cid}?pinataGatewayToken=${process.env.REACT_APP_PINATA_GATEWAY_TOKEN}`;
+      const tx = await contractInstance2.methods
+        .safeMint(address, parcelId, url)
+        .send({ from: address, type: 0 });
 
-      console.log("Transaction sent:", tx);
-      return tx; 
+      console.log("Asset Minted Successfully:", tx);
+      return tx;
     } catch (error) {
-      console.error("Error sending transaction:", error);
+      console.error("Error sending transaction:..", error);
       throw error;
     }
   };
 
-
-
-
-  const fetchAllData = async  () => {
+  const fetchAllData = async () => {
     let data = [];
     try {
+      handleStatus(STATE.LOADING);
+
       const result = await contractInstance1.methods.getAllParcels().call();
 
-      console.log(result,"chainRes")
+      console.log(result, "chainRes");
 
       if (Array.isArray(result)) {
         const promiseArray = result.map(async (item, index) => {
           console.log(`Pinned item ${index + 1}:`, item);
           const allData = await retrieveDataFromPinata(item);
-          console.log(allData,"we>")
-          return allData.data; 
+          console.log(allData, "we>");
+          handleStatus(STATE.SUCCESS);
+          return allData.data;
         });
 
+        const resolvedData = await Promise.all(promiseArray);
+
+        data = [...data, ...resolvedData];
+
+        console.log(data, ",,,,,");
+
+        console.log("All data retrieved:", data);
+
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching data from blockchain:", error);
+      throw error;
+    }
+  };
+
+ const fetchMapData = async () => {
+    let data = [];
+    try {
+      handleStatus(STATE.LOADING);
+
+      const result = await contractInstance1.methods.getAllParcels().call();
+  
+      console.log(result, "chainRes");
+  
+      if (Array.isArray(result)) {
+        const promiseArray = result.map(async (item, index) => {
+          console.log(`Pinned item ${index + 1}:`, item);
+    
+          const allData = await retrieveDataFromPinata(item);
+          handleStatus(STATE.SUCCESS);
+          return allData.data; 
+        });
+  
         const resolvedData = await Promise.all(promiseArray);
   
         data = [...data, ...resolvedData];
   
-        console.log(data,",,,,,")
-  
-        console.log("All data retrieved:", data);
-  
-        return data; 
+        return data;
       }
-
     } catch (error) {
       console.error("Error fetching data from blockchain:", error);
-      throw error; 
+      throw error;
     }
-  }
-
-
+  };
 
   const connectToWallet = async () => {
     setIsWalletConnected(false);
 
     if (window.ethereum) {
-
       try {
-
         await window.ethereum.request({ method: "eth_requestAccounts" });
 
         const accounts = await web3.eth.getAccounts();
@@ -162,10 +197,7 @@ export const AuthProvider = ({ children }) => {
 
         setWalletAddress(selectedAccount);
 
-        localStorage.setItem("walletAddress", selectedAccount);
-
         setIsWalletConnected(true);
-
       } catch (error) {
         console.error("Error connecting to wallet:", error);
         return null;
@@ -179,23 +211,25 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        initUser,
-        logout,
-        user,
-        setUser,
-        userData,
-        setUserData,
         connectToWallet,
         walletAddress,
         setAddress,
         isWalletConnected,
         setIsWalletConnected,
-        saveOwnerOnchain,
         saveParcelAssetOnchain,
         address: walletAddressRef.current,
         changeAddress,
-        fetchDataByParcelId, 
-        fetchAllData 
+        fetchDataByParcelId,
+        fetchAllData,
+        mintGeoToken,
+        onChainStatus,
+        isTxn,
+        handleChainData,
+        onChainData,
+        handleStatus,
+        status,
+        fetchMapData,
+        setWalletAddress
       }}
     >
       {children}
@@ -203,4 +237,3 @@ export const AuthProvider = ({ children }) => {
   );
 };
 export const useAuth = () => useContext(AuthContext);
-

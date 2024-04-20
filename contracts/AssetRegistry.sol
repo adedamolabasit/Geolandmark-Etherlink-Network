@@ -76,7 +76,7 @@ contract AssetRegistry {
         );
     }
 
-     function getAllParcels() public view returns (string[] memory) {
+    function getAllParcels() public view returns (string[] memory) {
         string[] memory ipfsHashes = new string[](parcels.length);
 
         for (uint256 i = 0; i < parcels.length; i++) {
@@ -90,6 +90,21 @@ contract AssetRegistry {
         address _address
     ) public view returns (OwnerInformation memory) {
         return walletInformation[_address];
+    }
+
+    function getSingleParcelIpfsHash(
+        address _owner,
+        uint256 _parcelId
+    ) public view returns (string memory) {
+        ParcelInformation[] storage ownerParcels = userParcels[_owner];
+
+        for (uint256 i = 0; i < ownerParcels.length; i++) {
+            if (ownerParcels[i].parcelId == _parcelId) {
+                return ownerParcels[i].ipfsHash;
+            }
+        }
+
+        revert("Parcel not found for the specified owner and parcel ID");
     }
 
     function saveParcelInformation(
@@ -120,7 +135,6 @@ contract AssetRegistry {
     ) public view returns (ParcelInformation[] memory) {
         return userParcels[_owner];
     }
-
 
     function getParcelById(
         uint256 _parcelId

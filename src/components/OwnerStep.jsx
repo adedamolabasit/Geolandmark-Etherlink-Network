@@ -95,7 +95,7 @@ export const OwnerStep = ({ saveOwnerData, ownerCurrentState, nextStep }) => {
               htmlFor="parcelNumber"
               className="mb-1 text-base font-bold text-[#B9B9B9]"
             >
-              Parcel Number (APN)
+              Parcel Number
             </label>
             <input
               onChange={formik.handleChange}

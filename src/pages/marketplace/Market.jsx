@@ -9,6 +9,7 @@ import Navbar from "../landing/Navbar";
 import { STATE } from "../../utils/stateConstants";
 import { retrievePinnedData } from "../../services/pinata";
 import { useAuth } from "../../contexts/authContext";
+import LoadingSpinner from "../../utils/spinner";
 
 function Market() {
   const {
@@ -20,25 +21,19 @@ function Market() {
     onBackClick,
     selectedProperty,
   } = useProperty();
-  const [status, setStatus] = useState(STATE.IDLE);
-  const [fetchedData, setFetchedData] = useState([]);
-  const {fetchDataByIpfsHash, address,  fetchAllData } = useAuth()
 
-  
+  const [fetchedData, setFetchedData] = useState([]);
+  const { fetchDataByIpfsHash, address, fetchAllData, handleStatus, status } =
+    useAuth();
 
   useEffect(() => {
-  
     const fetchData = async () => {
       try {
-        setStatus(STATE.LOADING);
         const data = await fetchAllData();
-        console.log(data,"testChain")
         setFetchedData(data);
-        setStatus(STATE.SUCCESS);
-        console.log(data, "retrieved data");
       } catch (error) {
         console.error("Error fetching pinned data:", error);
-        setStatus(STATE.ERROR);
+        handleStatus(STATE.ERROR);
         // Handle error (e.g., show error message)
       }
     };
@@ -47,17 +42,12 @@ function Market() {
   }, []);
 
   return (
-    <>
-      {status === STATE.LOADING && (
-        <div className="flex flex-col items-center justify-center h-80">
-          <span>Fetching Project</span>
-        </div>
-      )}
+    <div className="relative w-screen h-screen">
+      <div className="fixed">{status === STATE.LOADING && <LoadingSpinner />}</div>
       {status === STATE.SUCCESS && (
         <div>
           <Hero />
-          <div  className="px-[4.17vw] pt-6 pb-[36.30vh] text-white bg-[#1B1B1B]">
-    
+          <div className="px-[4.17vw] pt-6 pb-[36.30vh] text-white bg-[#1B1B1B]">
             <div className="flex items-center justify-between h-[4.91vh] mb-[7.69vh] ">
               <div className="flex gap-[1.04vw] items-center h-full ">
                 <button
@@ -78,9 +68,9 @@ function Market() {
                   }   px-[1.56vw] h-full rounded-[0.625rem]  `}
                   onClick={() => onActiveTab("Basic", "Basic")}
                 >
-                  Basic
+                  Tokenzed Asset
                 </button>
-                <button
+                {/* <button
                   className={`${
                     activeTab === "Classic"
                       ? "bg-[#009FBD] text-white"
@@ -99,7 +89,7 @@ function Market() {
                   onClick={() => onActiveTab("Premium", "Premium")}
                 >
                   Premium
-                </button>
+                </button> */}
               </div>
               <div className="h-full flex items-center gap-[0.73vw] ">
                 <div className="border-[1px] border-[#009FBD] w-[4.91vh] flex items-center justify-center rounded-sm h-full ">
@@ -129,7 +119,7 @@ function Market() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

@@ -18,7 +18,7 @@ function Index() {
       <PageThree />
       <PageFour />
       <PageFive />
-      <PageSix />
+      {/* <PageSix /> */}
       <PageSeven />
       <Footer />
     </div>

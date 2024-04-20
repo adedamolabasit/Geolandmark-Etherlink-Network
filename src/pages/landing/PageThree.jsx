@@ -11,22 +11,27 @@ function PageThree() {
       <img src={vec} alt="" />
       <div className="text-[#B9B9B9] mt-[3.70vh] mb-[4vh] md:mb-[8.33vh] font-medium ">
         <p>
-          GeoLandmark prioritizes the protection of your land interests by
-          offering accurate land registration, transparent transactions,
-          compliance with regulations, confidentiality, and expert support.
+          Transparency and Security: Blockchain technology ensures transparent
+          ownership records and secure transactions, reducing fraud, and
+          enhancing trust in the market. With GeoLandmark, your land assets are
+          protected by the immutable nature of blockchain, providing a reliable
+          and transparent ledger for ownership and transactions.
         </p>
         <br />
         <p>
-          Our streamlined process ensures precise registration, while secure
-          transactions safeguard your interests. We stay up-to-date with land
-          laws and regulations, ensuring compliance and protecting your rights.
-          Your data is handled with confidentiality and stored securely.
+          Fractional Ownership: Empower landowners with the ability to tokenize
+          their property, allowing investors to purchase fractional shares. This
+          innovative approach makes real estate investment more accessible and
+          inclusive, opening new opportunities for asset diversification and
+          investment growth.
         </p>
         <br />
         <p>
-          Our team of experts is available to provide guidance and support for
-          various land management aspects. Trust GeoLandmark for effective land
-          interest protection.
+          Increased Liquidity: Unlock the potential of your land assets through
+          tokenization on GeoLandmark. Tokenized assets can be traded seamlessly
+          on decentralized platforms, providing liquidity and flexibility to
+          asset owners. Enjoy the benefits of a liquid market where buying,
+          selling, and exchanging land tokens is efficient and accessible.
         </p>
       </div>
       <img
@@ -34,9 +39,6 @@ function PageThree() {
         alt=""
         className="w-[43rem] h-[33rem] md:mb-[13.98vh] mb-[9.26vh] "
       />
-      <button className="text-white bg-[#009FBD] md:w-[15vw] w-[40vw] h-[4.72vh] rounded-[0.22rem] md:rounded-[0.53rem] text-xs hover:bg-opacity-75 font-bold ">
-        Secure Your Spot Now!
-      </button>
     </div>
   );
 }

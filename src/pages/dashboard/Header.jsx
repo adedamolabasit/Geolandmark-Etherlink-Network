@@ -3,11 +3,11 @@ import profile from "../../assets/dashboard/profile.svg";
 import notif from "../../assets/dashboard/notif.svg";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/authContext";
-
+import { truncateWalletAddress } from "../../utils/truncateAddress";
 
 function Header() {
   const location = useLocation();
-  const {user} = useAuth()
+  const { user, address } = useAuth();
   let title;
   let subtitle;
 
@@ -16,6 +16,11 @@ function Header() {
     subtitle =
       "Register Your Land with Ease: Streamline the Process and Secure Your Property Rights with Our Trusted Land Registration Services.";
   } else if (location.pathname === "/dashboard/2") {
+    title = "Lease a Property!";
+    subtitle =
+      "Lease a Property Hassle-Free: Simplify the Process and Safeguard Your Rights with Our Trusted Property Leasing Services.";
+  }
+  if (location.pathname === "/dashboard/5") {
     title = "Lease a Property!";
     subtitle =
       "Lease a Property Hassle-Free: Simplify the Process and Safeguard Your Rights with Our Trusted Property Leasing Services.";
@@ -31,8 +36,8 @@ function Header() {
       <div className="flex gap-[10px] items-center ">
         <div className="text-end">
           <h1 className="font-semibold">{`${user?.firstName} ${user?.lastName}`}</h1>
-          <p className="flex items-center gap-[7px] hover:underline hover:text-white/75 cursor-pointer ">
-            SN/{user?.surconNumber}
+          <p className="flex items-center gap-[7px] hover:underline hover:text-white/75 cursor-pointer text-[#009FBD]">
+            {truncateWalletAddress(address)}
           </p>
         </div>
         <div className="relative">
@@ -43,7 +48,7 @@ function Header() {
           />
 
           <div className="absolute top-0 right-0 w-[25px] h-[25px] rounded-full bg-[#009FBD]">
-            <img src={notif} alt="" />
+            <img className="mx-1" src={notif} alt="" />
           </div>
         </div>
       </div>

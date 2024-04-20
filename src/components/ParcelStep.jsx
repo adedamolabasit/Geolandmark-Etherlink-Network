@@ -12,7 +12,6 @@ import { input_container_styles } from "../utils";
 import { pinFileToIpfs } from "../services/pinata";
 const formData = new FormData();
 
-
 export const ParcelStep = ({
   prevStep,
   nextStep,
@@ -53,27 +52,40 @@ export const ParcelStep = ({
     uploadSurveyPlan(event);
   };
 
-
   formData.append("ownershipDoc", ownerShipDoc);
   formData.append("surveyPlanDoc", surveyPlanDoc);
   formData.append("assetImage", assetImage);
 
-
-
   const step2 = async (values, methods) => {
     setStatus(STATE.LOADING);
     const userObj = {
+      isAreaType: isGeo,
       ...(isGeo
         ? {
             geographicCoordinates: [
               { point1: { px: formik.values.px1, py: formik.values.py1 } },
-              { point2: { px: formik.values.px2, py: formik.values.py2 } },
-              { point3: { px: formik.values.px3, py: formik.values.py3 } },
-              { point4: { px: formik.values.px4, py: formik.values.py4 } },
+              {
+                point2: {
+                  px: formik.values.px2 || formik.values.px1,
+                  py: formik.values.py2 || formik.values.py1,
+                },
+              },
+              {
+                point3: {
+                  px: formik.values.px3 || formik.values.px1,
+                  py: formik.values.py3 || formik.values.py1,
+                },
+              },
+              {
+                point4: {
+                  px: formik.values.px4 || formik.values.px1,
+                  py: formik.values.py4 || formik.values.py1,
+                },
+              },
             ],
           }
         : {
-            cartesianCoordinates: [
+            geographicCoordinates: [
               { point1: { px: formik.values.px1, py: formik.values.py1 } },
               { point2: { px: formik.values.px2, py: formik.values.py2 } },
               { point3: { px: formik.values.px3, py: formik.values.py3 } },
@@ -81,9 +93,9 @@ export const ParcelStep = ({
             ],
           }),
       document: {
-        ownershipDocument:ownerShipDoc || '',
-        surveyPlanDocument:surveyPlanDoc || '',
-        assetImage:assetImage || ''
+        ownershipDocument: ownerShipDoc || "",
+        surveyPlanDocument: surveyPlanDoc || "",
+        assetImage: assetImage || "",
       },
     };
 
@@ -98,12 +110,25 @@ export const ParcelStep = ({
     initialValues: {
       px1: landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.px || "",
       py1: landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.py || "",
-      px2: landParcelCurrentState?.geographicCoordinates?.[1]?.point2?.px || "",
-      py2: landParcelCurrentState?.geographicCoordinates?.[1]?.point2?.py || "",
-      px3: landParcelCurrentState?.geographicCoordinates?.[2]?.point3?.px || "",
-      py3: landParcelCurrentState?.geographicCoordinates?.[2]?.point3?.py || "",
-      px4: landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.px || "",
-      py4: landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.py || "",
+      px2:
+        landParcelCurrentState?.geographicCoordinates?.[1]?.point2?.px ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.px,
+      py2:
+        landParcelCurrentState?.geographicCoordinates?.[1]?.point2?.py ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.py,
+      px3:
+        landParcelCurrentState?.geographicCoordinates?.[2]?.point3?.px ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.px,
+      py3:
+        landParcelCurrentState?.geographicCoordinates?.[2]?.point3?.py ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.py,
+      px4:
+        landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.px ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.px,
+      py4:
+        landParcelCurrentState?.geographicCoordinates?.[3]?.point4?.py ||
+        landParcelCurrentState?.geographicCoordinates?.[0]?.point1?.py,
+      parcelImage: assetImage
     },
     validationSchema: Yup.object({
       px1: Yup.string().required("This field is required."),
@@ -114,6 +139,8 @@ export const ParcelStep = ({
       py3: Yup.string().optional("This field is required."),
       px4: Yup.string().optional("This field is required."),
       py4: Yup.string().optional("This field is required."),
+      py4: Yup.string().optional("This field is required."),
+      parcelImage: Yup.string().required("Upload a parcel image"),
     }),
     onSubmit: (values, methods) => {
       step2(values, methods);
@@ -146,12 +173,22 @@ export const ParcelStep = ({
                   </div>
                 </label>
                 <input
+                  name="parcelImage"
                   id="fileInput1"
                   type="file"
                   multiple
                   style={{ display: "none" }}
                   onChange={saveAssetImage}
+                  onBlur={formik.handleBlur}
                 />
+                {/* Display error message for px1 */}
+                {!assetImage ? (
+                  <div className="text-red-600">
+                    {formik.errors.parcelImage}
+                  </div>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
 
@@ -245,7 +282,7 @@ export const ParcelStep = ({
                     isGeo ? "" : "text-zinc-300 text-opacity-40"
                   } cursor-pointer w-[14.5vw]  text-base flex flex-col items-center font-bold leading-[0.9vw]`}
                 >
-                  Cartesian Co-ordinates
+                  Point Co-ordinates
                   <div
                     className={`${
                       isGeo ? "bg-cyan-600" : "bg-zinc-300 bg-opacity-40"
@@ -253,12 +290,12 @@ export const ParcelStep = ({
                   />
                 </div>
                 <div
-                  // onClick={activateCartSystem}
+                  onClick={activateCartSystem}
                   className={`${
                     !isGeo ? "" : "text-zinc-300 text-opacity-40"
-                  } cursor-not-allowed w-[14.5vw] text-zinc-400 text-base flex flex-col items-center font-bold leading-[0.9vw]`}
+                  }  w-[14.5vw] text-zinc-400 text-base flex flex-col items-center font-bold leading-[0.9vw]`}
                 >
-                  Geographic Co-ordinates
+                  Area Co-ordiantes
                   <div
                     className={`${
                       !isGeo ? "bg-violet-500" : "bg-zinc-300 bg-opacity-40 "
@@ -269,150 +306,190 @@ export const ParcelStep = ({
               <div className="w-full flex justify-around">
                 {isGeo ? (
                   <>
-                    <div>Eastings</div>
-                    <div>Northings</div>
+                    <div>Latitude</div>
+                    <div>Longtitude</div>
                   </>
                 ) : (
                   <>
-                    <div>Longitude</div>
                     <div>Latitude</div>
+                    <div>Longtitude</div>
                   </>
                 )}
               </div>
-              <div className="w-full flex justify-between">
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="Point1"
-                    name="px1"
-                    value={formik.values.px1}
-                    className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for px1 */}
-                  {formik.touched.px1 && formik.errors.px1 && (
-                    <div className="text-red-600">{formik.errors.px1}</div>
-                  )}
+            </div>
+            {!isGeo ? (
+              <div className="flex  flex-col items-ceneter gap-2">
+                <div className="w-full flex flex-col ">
+                  <div className="w-full flex justify-between">
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Point1"
+                        name="px1"
+                        value={formik.values.px1}
+                        className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for px1 */}
+                      {formik.touched.px1 && formik.errors.px1 && (
+                        <div className="text-red-600">{formik.errors.px1}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point1"
+                        name="py1"
+                        value={formik.values.py1}
+                        className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for py1 */}
+                      {formik.touched.py1 && formik.errors.py1 && (
+                        <div className="text-red-600">{formik.errors.py1}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point1"
-                    name="py1"
-                    value={formik.values.py1}
-                    className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for py1 */}
-                  {formik.touched.py1 && formik.errors.py1 && (
-                    <div className="text-red-600">{formik.errors.py1}</div>
-                  )}
+                <div className="w-full flex flex-col ">
+                  <div className="w-full flex justify-between">
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point2"
+                        name="px2"
+                        value={formik.values.px2}
+                        className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for px2 */}
+                      {formik.touched.px2 && formik.errors.px2 && (
+                        <div className="text-red-600">{formik.errors.px2}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        placeholder="point2"
+                        name="py2"
+                        value={formik.values.py2}
+                        className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for py2 */}
+                      {formik.touched.py2 && formik.errors.py2 && (
+                        <div className="text-red-600">{formik.errors.py2}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full flex flex-col ">
+                  <div className="w-full flex justify-between">
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point3"
+                        name="px3"
+                        value={formik.values.px3}
+                        className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for px3 */}
+                      {formik.touched.px3 && formik.errors.px3 && (
+                        <div className="text-red-600">{formik.errors.px3}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point3"
+                        name="py3"
+                        value={formik.values.py3}
+                        className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for py3 */}
+                      {formik.touched.py3 && formik.errors.py3 && (
+                        <div className="text-red-600">{formik.errors.py3}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full flex flex-col ">
+                  <div className="w-full flex justify-between">
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point4"
+                        name="px4"
+                        value={formik.values.px4}
+                        className=" w-[14.1146vw]  px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for px4 */}
+                      {formik.touched.px4 && formik.errors.px4 && (
+                        <div className="text-red-600">{formik.errors.px4}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <input
+                        type="number"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="point4"
+                        name="py4"
+                        value={formik.values.py4}
+                        className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                      />
+                      {/* Display error message for py4 */}
+                      {formik.touched.py4 && formik.errors.py4 && (
+                        <div className="text-red-600">{formik.errors.py4}</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="w-full flex flex-col ">
-              <div className="w-full flex justify-between">
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point2"
-                    name="px2"
-                    value={formik.values.px2}
-                    className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for px2 */}
-                  {formik.touched.px2 && formik.errors.px2 && (
-                    <div className="text-red-600">{formik.errors.px2}</div>
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    placeholder="point2"
-                    name="py2"
-                    value={formik.values.py2}
-                    className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for py2 */}
-                  {formik.touched.py2 && formik.errors.py2 && (
-                    <div className="text-red-600">{formik.errors.py2}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="w-full flex flex-col ">
-              <div className="w-full flex justify-between">
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point3"
-                    name="px3"
-                    value={formik.values.px3}
-                    className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for px3 */}
-                  {formik.touched.px3 && formik.errors.px3 && (
-                    <div className="text-red-600">{formik.errors.px3}</div>
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point3"
-                    name="py3"
-                    value={formik.values.py3}
-                    className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for py3 */}
-                  {formik.touched.py3 && formik.errors.py3 && (
-                    <div className="text-red-600">{formik.errors.py3}</div>
-                  )}
+            ) : (
+              <div className="w-full flex flex-col ">
+                <div className="w-full flex justify-between">
+                  <div className="flex flex-col">
+                    <input
+                      type="number"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="Point1"
+                      name="px1"
+                      value={formik.values.px1}
+                      className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                    />
+                    {/* Display error message for px1 */}
+                    {formik.touched.px1 && formik.errors.px1 && (
+                      <div className="text-red-600">{formik.errors.px1}</div>
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <input
+                      type="number"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="point1"
+                      name="py1"
+                      value={formik.values.py1}
+                      className="w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
+                    />
+                    {/* Display error message for py1 */}
+                    {formik.touched.py1 && formik.errors.py1 && (
+                      <div className="text-red-600">{formik.errors.py1}</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="w-full flex flex-col ">
-              <div className="w-full flex justify-between">
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point4"
-                    name="px4"
-                    value={formik.values.px4}
-                    className=" w-[14.1146vw]  px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for px4 */}
-                  {formik.touched.px4 && formik.errors.px4 && (
-                    <div className="text-red-600">{formik.errors.px4}</div>
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    placeholder="point4"
-                    name="py4"
-                    value={formik.values.py4}
-                    className=" w-[14.1146vw] px-2 text-[#1B1B1B] text-sm placeholder:text-[#1B1B1B] h-[4.91vh] rounded-[7px] bg-zinc-300 "
-                  />
-                  {/* Display error message for py4 */}
-                  {formik.touched.py4 && formik.errors.py4 && (
-                    <div className="text-red-600">{formik.errors.py4}</div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
           {/* ... */}
         </div>

@@ -24,6 +24,8 @@ import { useAuth } from "../../contexts/authContext";
 import { SingleBaseMap } from "../../lib/leaflets";
 import Footer from "../landing/Footer";
 import { truncateWalletAddress } from "../../utils/truncateAddress";
+import { generateTokenWithAddress } from "../../utils/generateTokenwithAddress";
+import LoadingSpinner from "../../utils/spinner";
 
 // import dp1 from "../../assets/display/dp1.svg";
 // import dp2 from "../../assets/display/dp2.svg";
@@ -48,10 +50,10 @@ function ProductDescription({
   const data = locationState.state;
 
   const navigate = useNavigate();
-  const { fetchDataByParcelId } = useAuth();
+  const { fetchDataByParcelId, mintGeoToken, handleStatus, status } = useAuth();
   const [toggleYear, setToggleYear] = useState("Year 1");
-  const [status, setStatus] = useState(STATE.IDLE);
   const [parcel, setParcel] = useState();
+  const [tokenId, setTokenId] = useState();
   const dataRef = useRef();
 
   const {
@@ -62,17 +64,12 @@ function ProductDescription({
   } = useProperty();
   let info;
   useEffect(() => {
-    setStatus(STATE.LOADING);
-
     const callData = async () => {
       const info = await fetchDataByParcelId(data.address, data.parcelNumber);
       setParcel(info.data);
-      console.log(info, "iiiivvv");
     };
     callData();
-    setStatus(STATE.SUCCESS);
   }, [data]);
-  console.log(parcel, "sign");
 
   const url = process.env.API_BASE_URL;
 
@@ -102,22 +99,35 @@ function ProductDescription({
     "https://i.ibb.co/7Gf4xH8/f12.png",
   ];
 
-  const truncatedWalledAddress = truncateWalletAddress(parcel?.ownership?.address)
+  const truncatedWalledAddress = truncateWalletAddress(
+    parcel?.ownership?.address
+  );
 
+  console.log(tokenId, parcel?.ownership?.address, "beast");
   const getRandomProperties = (array, count) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
   const selectedImage = getRandomProperties(imageData, 1);
+
+  // const handleMintToken = async () => {
+  //   try {
+  //     const a = await mintGeoToken(data.address, data.parcelNumber);
+  //     onChainStatus(false);
+  //     navigate("/marketplace");
+
+  //     toast.success("Asset Minted successfully!");
+  //   } catch (err) {
+  //     toast.error(err || "An Error has occured. Please try again.");
+  //     handleStatus(STATE.ERROR);
+  //   }
+  // };
   return (
-    <>
+    <div className="relative w-screen h-screen">
+      <div className="fixed">
+        {status === STATE.LOADING && <LoadingSpinner />}
+      </div>
       <div className="">
-        {status == STATE.LOADING && (
-          <div className="flex flex-col items-center justify-center h-80">
-            {/* <img src={Loader} alt="" className="mb-4" /> */}
-            <span>Fetching Project</span>
-          </div>
-        )}
         {status == STATE.SUCCESS && parcel && (
           <div className="bg-[#1B1B1B] w-full h-full py-[3.51vh] px-[4.17vw] text-white">
             <Navbar />
@@ -129,7 +139,7 @@ function ProductDescription({
               Back to Marketplace
             </button>
             <h1 className="font-black text-3xl text-[#B9B9B9] ">
-              {truncatedWalledAddress }
+              {truncatedWalledAddress}
             </h1>
             <p className="text-lg text-[#009FBD] ">
               {`GEOLANDMARK-ASSET-${data.parcelNumber}`}
@@ -149,20 +159,27 @@ function ProductDescription({
                     className="  h-full w-full object-cover rounded-[40px]"
                   />
                 </div>
+                <div className="w-full">
+                  <div className="text-[#865DFF] font-medium text-bold text-lg ">
+                    Legal Description:
+                  </div>
+                  <div className="text-[#B9B9B9]">
+                    {parcel?.owner?.legalDescription}
+                  </div>
+                </div>
               </div>
               <div className="row-span-6 col-span-1 bg-[#0D0D0D] rounded-[40px]  flex-col flex gap-[6.67vh] ">
-                {parcel && <SingleBaseMap data={parcel} />}
+                 <SingleBaseMap data={parcel} />
               </div>
             </div>
             <PropertyDetails
-              parcelNumber={data?.parcelNumber}
-              walletAddress={data?.address}
+             parcel ={parcel}
             />
           </div>
         )}
       </div>
-      <Footer />
-    </>
+      {status !== STATE.LOADING && <Footer />}
+    </div>
   );
 }
 

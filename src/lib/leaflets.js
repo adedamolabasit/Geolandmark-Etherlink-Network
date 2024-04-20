@@ -5,80 +5,37 @@ import {
   Popup,
   Polygon,
   Circle,
-  useMapEvents,
 } from "react-leaflet";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState} from "react";
 import "leaflet/dist/leaflet.css";
 import { calculatePolygonCenter } from "../utils/centerPointCoversion";
 import { STATE } from "../utils/stateConstants";
 import Logo from "../assets/dashboard/logo.svg";
-import Point from "../assets/marketplace/point.svg";
 import L from "leaflet";
 import { CartesianToGeographic } from "../utils/coordinateConversion";
-import { getRegisteredLands } from "../services/landRegistry";
-import { fetchMaplData } from "../services/pinata";
-import { useAuth } from "../contexts/authContext";
+import { useNavigate } from "react-router-dom";
 
-export const BaseMap = () => {
-  const [fetchedData, setFetchedData] = useState([]);
-  const [mapInstance, setMapInstance] = useState(null);
+export const BaseMap = (props) => {
   const [status, setStatus] = useState(STATE.IDLE);
-  // const fetchLandsRegistry = async () => {
-  //   const response = await getRegisteredLands();
-  //   console.log(response.data.data.records, "resMap");
-  //   setFetchedData(response.data.data.records);
-  // };
-  // useEffect(() => {
-  //   fetchLandsRegistry();
-  // }, []);
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setStatus(STATE.LOADING);
-        const data = await fetchMaplData();
-        setFetchedData(data);
-        setStatus(STATE.SUCCESS);
-        console.log(data, "retrieved data");
-      } catch (error) {
-        setStatus(STATE.ERROR);
-        console.error("Error fetching pinned data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-  // const getAllCoordinates = fetchedData.map((data) => {
-  //   return data.geographicCoordinates.map((cord) => {
-  //     const point = Object.values(cord)[0];
-  //     return [point.px, point.py];
-  //   });
-  // });
-  // const convertedCooordinate = getAllCoordinates.map((cord) => {
-  //   const geographicCoordinates = cord.map((point) =>
-  //     CartesianToGeographic(point[0], point[1])
-  //   );
-  //   return geographicCoordinates;
-  // });
-  console.log(fetchedData, "uuuuuuuu");
   let convertedCoordinates;
-  if (status === STATE.SUCCESS) {
-    convertedCoordinates = fetchedData.map((data) => {
-      console.log(data, "ffe");
-      return data.landParcel.geographicCoordinates.map((cord) => {
-        const point = Object.values(cord)[0];
-        const cartesianPoint = [point.px, point.py];
-        const geographicPoint = CartesianToGeographic(
-          cartesianPoint[0],
-          cartesianPoint[1]
-        );
-        return {
-          spatial: geographicPoint,
-          nonSpatial: data,
-        };
-      });
+ 
+
+  convertedCoordinates = props.fetchedData.map((data) => {
+    return data.landParcel.geographicCoordinates.map((cord) => {
+      const point = Object.values(cord)[0];
+      const cartesianPoint = [point.px, point.py];
+      const geographicPoint = CartesianToGeographic(
+        cartesianPoint[0],
+        cartesianPoint[1]
+      );
+      return {
+        spatial: geographicPoint,
+        nonSpatial: data,
+      };
     });
-  }
+  });
 
   console.log(convertedCoordinates, "gdgeg");
   let zoom = 10;
@@ -94,11 +51,14 @@ export const BaseMap = () => {
     shadowAnchor: [13, 28],
   });
   let epcotCenter = [7.466648, 4.566644];
-  const handleMarkerClick = (position, zoomLevel) => {
-    if (mapInstance) {
-      mapInstance.setView(position, zoomLevel);
-    }
-  };
+  // const handleMarkerClick = (position, zoomLevel) => {
+  //   console.log(position, "lobe");
+  //   if (mapInstance) {
+  //     mapInstance.setView(position, zoomLevel);
+  //   }
+  // };
+
+
 
   return (
     <>
@@ -129,29 +89,174 @@ export const BaseMap = () => {
                     positions={data.map((coord) => coord.spatial)}
                     pathOptions={{ color: "red" }}
                   />
-                  <Marker
-                    icon={icon}
-                    position={data[1].spatial}
-                    onClick={() =>
-                      handleMarkerClick(
-                        data.map((coord) => coord.spatial),
-                        18
-                      )
-                    }
-                  >
-                    <Popup key={index}>
-                      {data.map((attr, innerIndex) =>
-                        attr.nonSpatial.id === innerIndex ? (
-                          <div key={innerIndex}>
-                            <h6 className="text-red-600">
-                              {attr.nonSpatial.address}
-                            </h6>
-                            hey, {attr.nonSpatial.address}
+                  {data.map((attr, innerIndex) => (
+                    <Marker
+                      key={attr.nonSpatial.owner.parcelNumber} // Use a unique key based on parcelNumber
+                      icon={icon}
+                      position={attr.spatial} // Assuming attr.spatial is correct spatial data
+                      onClick={() =>
+                        handleMarkerClick(attr.nonSpatial.owner.parcelNumber)
+                      }
+                    >
+                      {/* {selectedParcelId ===
+                        attr.nonSpatial.owner.parcelNumber && ( */}
+                      <Popup>
+                        <div
+                          style={{
+                            width: "300px",
+                            maxHeight: "400px",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                          }}
+                          className="bg-black rounded-md px-4 py-4 w-full"
+                        >
+                          <div className="flex gap-2 bg-white px-2 py-2 rounded-md">
+                            <div className="text-black text-lg text-bold">
+                              Powered by
+                            </div>
+                            <img
+                              src="https://testnet-explorer.etherlink.com/assets/network_logo.svg"
+                              alt="texos"
+                            />
                           </div>
-                        ) : null
-                      )}
-                    </Popup>
-                  </Marker>
+                          <h6 className="mt-4 text-[#009FBD]">
+                            Token Information
+                          </h6>
+                          <table className="table-auto">
+                            <tbody>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  TokenId:
+                                </td>
+                                <td className="text-white truncate ">
+                                  {attr.nonSpatial.owner.fullName}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  Token Url:
+                                </td>
+                                <td className="text-white">
+                                  {attr.nonSpatial.owner.address}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold ">
+                                  Date Minted:
+                                </td>
+                                <td className="text-white">
+                                  {attr.nonSpatial.owner.emailAddress}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  Email:
+                                </td>
+                                <td className="text-white">
+                                  {attr.nonSpatial.owner.emailAddress}
+                                </td>
+                              </tr>
+                              {/* Add more rows for additional information */}
+                            </tbody>
+                          </table>
+                          <h6 className="mt-4 text-[#009FBD]">
+                            Property Information
+                          </h6>
+                          <table className="table-auto">
+                            <tbody>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold ">
+                                  {" "}
+                                  Asset Type:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  Land Parcel
+                                </td>
+                              </tr>
+
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  ParcelId:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  {attr?.nonSpatial?.owner?.parcelNumber}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  Area:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  {attr?.nonSpatial?.owner?.value}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  Estimated Value:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  {attr?.nonSpatial?.owner?.area}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  Address:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  {attr?.nonSpatial?.owner?.address}
+                                </td>
+                              </tr>
+                              {/* Add more rows for property details */}
+                            </tbody>
+                          </table>
+                          <h6 className="mt-4 text-[#009FBD]">
+                            Geographic Coordinates Information
+                          </h6>
+                          <table className="table-auto">
+                            <tbody>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold ">
+                                  {" "}
+                                  Latitude:
+                                </td>
+                                <td className=" text-white truncate mt-2">
+                                  {
+                                    attr?.nonSpatial?.landParcel
+                                      ?.geographicCoordinates[0]?.point1?.px
+                                  }
+                                </td>
+                              </tr>
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold ">
+                                  Longtitude:
+                                </td>
+                                <td className="text-white truncate mt-2">
+                                  {
+                                    attr?.nonSpatial?.landParcel
+                                      ?.geographicCoordinates[0]?.point1?.py
+                                  }
+                                </td>
+                              </tr>
+                              {/* Add more rows for property details */}
+                            </tbody>
+                          </table>
+                          <div className="w-full justify-center mt-6 ml-6">
+                            {/* <button
+                              onClick={() =>
+                                handleView(
+                                  attr?.nonSpatial?.owner?.parcelNumber
+                                )
+                              }
+                              className="bg-[#009FBD] font-bold w-[45.35vw] md:w-[15.68vw] h-[4.72vh] md:rounded-[0.53rem] rounded-[0.22rem] text-white "
+                            >
+                              <h1 className="text-white">More Information</h1>
+                            </button> */}
+                          </div>
+                        </div>
+                      </Popup>
+                      {/* )} */}
+                    </Marker>
+                  ))}
                 </React.Fragment>
               );
             })}
@@ -163,157 +268,8 @@ export const BaseMap = () => {
   );
 };
 
-export const ExtendedBaseMap = () => {
-  const LocationMarker = () => {
-    const map = useMapEvents({
-      locationfound(e) {
-        const { lat, lng } = e.latlng;
-        const radius = e.accuracy;
 
-        L.circle(e.latlng, {
-          radius,
-          fillColor: "green",
-          color: "green",
-          fillOpacity: 0.5,
-        }).addTo(map);
-
-        L.marker(e.latlng).addTo(map).bindPopup("You are here").openPopup();
-      },
-      locationerror(e) {
-        alert(`Unable to determine location: ${e.message}`);
-      },
-    });
-
-    useEffect(() => {
-      map.locate({ setView: true, watch: true, maxZoom: 16 });
-    }, [map]);
-
-    return null;
-  };
-
-  return (
-    <MapContainer center={[0, 0]} zoom={13} style={{ height: "500px" }}>
-      <TileLayer url="https://tile.openstreetmap.org/${z}/${x}/${y}.png" />
-      <LocationMarker />
-    </MapContainer>
-  );
-};
-
-export const ExtendedBaseMaps = () => {
-  const [fetchedData, setFetchedData] = useState([]);
-  const mapRef = useRef();
-
-  useEffect(() => {
-    const { current } = mapRef;
-    console.log(mapRef.current);
-    if (current && current.leafletElement) {
-      const map = current.leafletElement;
-      if (map.on) {
-        map.on("locationfound", handleOnLocationFound);
-        map.on("locationerror", handleOnLocationError);
-      }
-
-      return () => {
-        if (map.off) {
-          map.off("locationfound", handleOnLocationFound);
-          map.off("locationerror", handleOnLocationError);
-        }
-      };
-    }
-  }, [mapRef.current]);
-
-  function handleOnLocationFound(event) {
-    const { current } = mapRef;
-    let circle;
-    if (current && current.leafletElement) {
-      const map = current.leafletElement;
-      const latlng = event.latlng;
-      const radius = event.accuracy;
-      circle = L.circle(latlng, {
-        radius,
-        fillColor: "green",
-        color: "green",
-        fillOpacity: 0.5,
-      });
-      circle.addTo(map);
-    }
-    console.log(circle, "circle", current);
-  }
-
-  function handleOnLocationError(error) {
-    alert(`Unable to determine location: ${error.message}`);
-  }
-
-  const fetchLandsRegistry = async () => {
-    const response = await getRegisteredLands();
-    console.log(response.data.data.records, "resMap");
-    setFetchedData(response.data.data.records);
-  };
-
-  useEffect(() => {
-    fetchLandsRegistry();
-  }, []);
-
-  const getAllCoordinates = fetchedData.map((data) => {
-    return data.geographicCoordinates.map((cord) => {
-      const point = Object.values(cord)[0];
-      return [point.px, point.py];
-    });
-  });
-
-  const convertedCooordinate = getAllCoordinates.map((cord) => {
-    const geographicCoordinates = cord.map((point) =>
-      CartesianToGeographic(point[0], point[1])
-    );
-    return geographicCoordinates;
-  });
-
-  console.log(getAllCoordinates, "allCoordinates", convertedCooordinate);
-
-  const zoom = 10;
-  const location = [7.508854, 4.544375]; // Coordinates for the map center (Nigeria)
-
-  const icon = L.icon({
-    iconUrl: Logo,
-    iconSize: [14, 14],
-    iconAnchor: [6, 24],
-    popupAnchor: null,
-    shadowUrl: null,
-    shadowSize: null,
-    shadowAnchor: null,
-  });
-
-  const epcotCenter = [7.466648, 4.566644];
-
-  return (
-    <div className="relative z-0w-full h-[89.63vh] bg-gray-100  rounded-[2vh] border border-4 border-[#009FBD">
-      <MapContainer
-        center={location}
-        zoom={zoom}
-        className="h-full rounded-[40px] "
-        ref={mapRef}
-      >
-        <TileLayer
-          url="https://tile.openstreetmap.org/${z}/${x}/${y}.png"
-          attribution="© OpenStreetMap contributors"
-        />
-        {convertedCooordinate.map((coordinate, index) => {
-          const cordCent = calculatePolygonCenter(coordinate);
-          return (
-            <React.Fragment key={index}>
-              <Polygon positions={coordinate} pathOptions={{ color: "red" }} />
-              <Marker icon={icon} position={coordinate[1]} />
-            </React.Fragment>
-          );
-        })}
-      </MapContainer>
-    </div>
-  );
-};
-
-export const SingleBaseMap = ({data}) => {
-  console.log(data,"totell")
-
+export const SingleBaseMap = ({ data }) => {
   const zoom = 24;
   const icon = L.icon({
     iconUrl: Logo,
@@ -351,29 +307,27 @@ export const SingleBaseMap = ({data}) => {
   const location = [polygonCenter[1], polygonCenter[0]]; // Coordinates for the map center (Nigeria)
   return (
     <>
-      
-        <div className="w-full h-full bg-gray-100  rounded-[2vh]">
-          <MapContainer
-            center={location}
-            zoom={zoom}
-            className="h-full rounded-[40px]"
-          >
-            <TileLayer
-              url="https://tile.openstreetmap.org/${z}/${x}/${y}.png"
-              attribution="© OpenStreetMap contributors"
-            />
-            <Polygon
-              positions={convertedCooordinate}
-              pathOptions={{ color: "red" }}
-            />
-            <Marker icon={icon} position={epcotCenter}>
-              <Popup>
-                {data.ownership.fullName},
-                {data.owner?.address}
-              </Popup>
-            </Marker>
-          </MapContainer>
-        </div>
+      <div className="w-full h-full bg-gray-100  rounded-[2vh]">
+        <MapContainer
+          center={location}
+          zoom={zoom}
+          className="h-full rounded-[40px]"
+        >
+          <TileLayer
+            url="https://tile.openstreetmap.org/${z}/${x}/${y}.png"
+            attribution="© OpenStreetMap contributors"
+          />
+          <Polygon
+            positions={convertedCooordinate}
+            pathOptions={{ color: "red" }}
+          />
+          <Marker icon={icon} position={epcotCenter}>
+            <Popup>
+              {data.ownership.fullName},{data.owner?.address}
+            </Popup>
+          </Marker>
+        </MapContainer>
+      </div>
     </>
   );
 };

@@ -12,8 +12,8 @@ function PageFour() {
     {
       id: 1,
       img: one,
-      title: "Hassle-Free Land Registration",
-      description: "Simplify the process and ensure accuracy.",
+      title: "Hassle-Free Asset Tokenization",
+      description: "Simplify and ensure accuracy with smart contracts.",
     },
     {
       id: 2,
@@ -25,14 +25,14 @@ function PageFour() {
       id: 3,
       img: three,
       title: "Efficient Land Transactions",
-      description: "Amplified Property Visibility",
+      description: "Amplify property visibility and streamline transactions using blockchain technology.y",
     },
     {
       id: 4,
       img: four,
-      title: "Expert Assistance",
+      title: "Expert Assistance with Blockchain",
       description:
-        "Access a network of trusted surveyors and agents for guidance.",
+        "ccess a network of trusted experts leveraging blockchain technology..",
     },
     {
       id: 5,
@@ -44,7 +44,8 @@ function PageFour() {
       id: 6,
       img: six,
       title: "Efficient Property Search",
-      description: "Find the perfect land or apartment with ease.",
+      description:
+        "Discover the perfect land or apartment with ease using blockchain technology.",
     },
   ];
 

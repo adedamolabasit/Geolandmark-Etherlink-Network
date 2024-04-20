@@ -9,23 +9,12 @@ import { useAuth } from "../../contexts/authContext";
 import { truncateAddress } from "../../utils/truncateAddress";
 
 function PropertyDetails(props) {
-  const [status, setStatus] = useState(STATE.IDLE);
   const [parcel, setParcel] = useState();
-  const { fetchDataByParcelId } = useAuth();
+  const { fetchDataByParcelId, handleStatus, status } = useAuth();
+  console.log(parcel,"uru")
 
   useEffect(() => {
-    let info;
-    setStatus(STATE.LOADING);
-
-    const callData = async () => {
-      info = await fetchDataByParcelId(props.walletAddress, props.parcelNumber);
-      setParcel(info.data);
-    };
-
-    console.log(info, "oepe<,");
-
-    callData();
-    setStatus(STATE.SUCCESS);
+    setParcel(props.parcel);
   }, [props]);
 
   const [toggleContent, setToggleContent] = useState("landInformation");
@@ -34,16 +23,8 @@ function PropertyDetails(props) {
     setToggleContent(content);
   };
 
-  console.log(parcel, "oppp");
-
   return (
     <>
-      {status == STATE.LOADING && (
-        <div className="flex flex-col items-center justify-center h-80">
-          {/* <img src={Loader} alt="" className="mb-4" /> */}
-          <span>Fetching Project</span>
-        </div>
-      )}
       {status == STATE.SUCCESS && (
         <div className="flex items-center justify-center w-full ">
           <div className="w-full self-start">
@@ -339,7 +320,8 @@ function PropertyDetails(props) {
                           Email Address
                         </h5>
                         <p className="text-lg text-[#B9B9B9]">
-                          {parcel?.ownership?.emailAddress}
+                          {/* {parcel?.ownership?.emailAddress} */}
+                          --Confidential--
                         </p>
                       </div>
                     </div>
@@ -349,7 +331,8 @@ function PropertyDetails(props) {
                           Place Of Birth
                         </h5>
                         <p className="texttext-[#B9B9B9] ">
-                          {parcel?.ownership?.placeOfBirth || "null"}
+                          {/* {parcel?.ownership?.placeOfBirth || "null"} */}
+                          --Confidential--
                         </p>
                       </div>
 
@@ -368,7 +351,8 @@ function PropertyDetails(props) {
                           State Of Origin
                         </h5>
                         <p className="texttext-[#B9B9B9] ">
-                          {parcel?.ownership?.stateOfOrigin || "null"}
+                          {/* {parcel?.ownership?.stateOfOrigin || "null"} */}
+                          --Confidential--
                         </p>
                       </div>
                       <div className=" mb-[2.13vh] ">
@@ -395,7 +379,8 @@ function PropertyDetails(props) {
                           Contact Information
                         </h5>
                         <p className="texttext-[#B9B9B9] ">
-                          {parcel?.ownership?.mobileNumber || "null"}
+                          {/* {parcel?.ownership?.mobileNumber || "null"} */}
+                          --Confidential--
                         </p>
                       </div>
                     </div>

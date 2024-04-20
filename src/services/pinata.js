@@ -1,9 +1,9 @@
 const axios = require("axios");
 
-const PINATA_JWT = process.env.REACT_APP_PINATA_JWT_TOKEN
+const PINATA_JWT = process.env.REACT_APP_PINATA_JWT_TOKEN 
 const GATEWAY_URL = process.env.REACT_APP_PINATA_GATEWAY_URL;
 const PINATA_API_BASE_URL = "https://api.pinata.cloud";
-const PINATA_API_KEY = "2a7f6730b90019e4fe26";
+const PINATA_API_KEY =process.env.REACT_APP_PINATA_API_KEY;
 const PINATA_SECRET_API_KEY = process.env.REACT_APP_PINATA_SECRET_API_KEY
 
 export async function saveDataToPinata(data) {
@@ -95,7 +95,7 @@ export const pinAssetOnIPFs = async (data) => {
 export async function retrieveDataFromPinata(ipfsHash) {
   try {
     const response = await fetch(
-      `${process.env.REACT_APP_PINATA_GATEWAY_URL}/ipfs/${ipfsHash}?pinataGatewayToken=${proceess.env.REACT_APP_PINATA_GATEWAY_TOKEN}`,
+      `${process.env.REACT_APP_PINATA_GATEWAY_URL}/ipfs/${ipfsHash}?pinataGatewayToken=${process.env.REACT_APP_PINATA_GATEWAY_TOKEN}`,
       {
         headers: {
           Accept: "application/json",

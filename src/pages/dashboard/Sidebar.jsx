@@ -31,7 +31,7 @@ const Sidebar = () => {
     } else if (id === 4) {
       navigate(`/dashboard/1`);
     } else if (id === 5) {
-      navigate(`/dashboard/1`);
+      navigate(`/dashboard/5`);
     } else if (id === 6) {
       navigate(`/dashboard/1`);
     }
