@@ -11,17 +11,12 @@ import Footer from "../landing/Footer";
 import { truncateWalletAddress } from "../../utils/truncateAddress";
 import LoadingSpinner from "../../utils/spinner";
 
-function ProductDescription({
-}) {
+function ProductDescription({}) {
   const locationState = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const data = locationState.state;
 
-  const {
-    fetchDataByParcelId,
-    status,
-    getTokenURI,
-  } = useContract();
+  const { fetchDataByParcelId, status, getTokenURI } = useContract();
   const [parcel, setParcel] = useState();
   const [tokenURI, setTokenURI] = useState();
 
@@ -35,11 +30,9 @@ function ProductDescription({
     callData();
   }, [data]);
 
-  const onBackClick = () =>{
-    navigate('/assets')
-  }
-
-
+  const onBackClick = () => {
+    navigate("/assets");
+  };
 
   const imageData = [
     "https://i.ibb.co/vHThG3J/f1.png",
@@ -114,15 +107,13 @@ function ProductDescription({
                     className="  h-full w-full object-cover rounded-[40px]"
                   />
                 </div>
-                <div className="w-full">
-                  <div className="text-[#865DFF] font-medium text-bold text-lg ">
-                    Legal Description:
-                  </div>
-                  <div className="text-[#B9B9B9]">
-                    {parcel?.owner?.legalDescription}
+                <div className="row-span-1 col-span-6 h-50 overflow-auto">
+                  <div className="text-[#865DFF] font-medium text-lg">
+                    Legal Description: {parcel?.owner?.legalDescription}
                   </div>
                 </div>
               </div>
+
               <div className="row-span-6 col-span-1 bg-[#0D0D0D] rounded-[40px]  flex-col flex gap-[6.67vh] ">
                 <SingleBaseMap data={parcel} />
               </div>

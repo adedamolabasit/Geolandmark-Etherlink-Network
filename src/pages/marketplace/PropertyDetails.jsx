@@ -384,7 +384,7 @@ function PropertyDetails(props) {
                     <div>
                       <div className=" mb-[2.13vh] ">
                         <h5 className="text-[#865DFF] font-bold text-lg">
-                          smart contract Address
+                          Smart Contract Address
                         </h5>
                         <p className="texttext-[#B9B9B9] ">
                           {process.env.REACT_APP_NFT_CONTRACT_ADDRESS}
@@ -401,7 +401,7 @@ function PropertyDetails(props) {
                     <div>
                       <div className=" mb-[2.13vh] ">
                         <h5 className="text-[#865DFF] font-bold text-lg">
-                          token URI
+                          Token URI
                         </h5>
                         <p className="texttext-[#B9B9B9] ">
                           {props.tokenURI}
