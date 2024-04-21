@@ -13,7 +13,6 @@ import { useAuth } from "../contexts/authContext";
 import { pinFileToIpfs } from "../services/pinata";
 import { generateTokenWithAddress } from "../utils/generateTokenwithAddress";
 
-
 export const LandOwnerShipStep = ({
   prevStep,
   saveLandOwnershipData,
@@ -58,7 +57,8 @@ export const LandOwnerShipStep = ({
   };
 
   const step3 = async (values, _methods) => {
-    handleStatus(STATE.SUCCESS);
+    handleStatus(STATE.LOADING);
+
     const userObj = {
       title: formik.values.title,
       fullName: formik.values.fullName,
@@ -78,20 +78,18 @@ export const LandOwnerShipStep = ({
     let ownerShipDocumentCID;
     let surveyPlanCID;
 
-
-      parcelImageCID = await pinFileToIpfs(
-        landParcelCurrentState?.document?.assetImage,
-        "parcelImage"
-      );
-      ownerShipDocumentCID = await pinFileToIpfs(
-        landParcelCurrentState?.document?.assetImage,
-        "proofOfOwnership"
-      );
-      surveyPlanCID = await pinFileToIpfs(
-        landParcelCurrentState?.document?.assetImage,
-        "surveyPlan"
-      );
-    
+    parcelImageCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "parcelImage"
+    );
+    ownerShipDocumentCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "proofOfOwnership"
+    );
+    surveyPlanCID = await pinFileToIpfs(
+      landParcelCurrentState?.document?.assetImage,
+      "surveyPlan"
+    );
 
     const allData = {
       owner: { ...ownerCurrentState },
@@ -116,10 +114,6 @@ export const LandOwnerShipStep = ({
         surveyPlan: `${gateWayUrl}/ipfs/${surveyPlanCID}?pinataGatewayToken=${pinataGatewayToken}`,
       },
     };
-
-    const tokenId = `${generateTokenWithAddress(address)}${
-      allData.owner.parcelNumber
-    }`;
 
     try {
       onChainStatus(false);

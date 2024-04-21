@@ -11,7 +11,7 @@ import { truncateAddress } from "../../utils/truncateAddress";
 function PropertyDetails(props) {
   const [parcel, setParcel] = useState();
   const { fetchDataByParcelId, handleStatus, status } = useAuth();
-  console.log(parcel,"uru")
+  console.log(parcel, "uru");
 
   useEffect(() => {
     setParcel(props.parcel);
@@ -61,13 +61,13 @@ function PropertyDetails(props) {
               </h1>
               <h1
                 className={`text-lg font-black  mb-4  cursor-pointer  ${
-                  toggleContent === "zoningInformation"
+                  toggleContent === "tokenInformation"
                     ? "text-[#865DFF]"
                     : "text-[#009FBD]"
                 } `}
-                onClick={() => handleToggle("blockchaInInformation")}
+                onClick={() => handleToggle("tokenInformation")}
               >
-                Network Information
+                Token Information
               </h1>
             </div>
             <div className=" h-1 bg-[#009fbd] bg-opacity-40 "></div>
@@ -383,6 +383,60 @@ function PropertyDetails(props) {
                           --Confidential--
                         </p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {toggleContent === "tokenInformation" && (
+                <div className="pb-4">
+                  <div className="flex  justify-start gap-40">
+                    <div>
+                      <div className=" mb-[2.13vh] ">
+                        <h5 className="text-[#865DFF] font-bold text-lg ">
+                          Token
+                        </h5>
+                        <p className="text-lg text-[#B9B9B9] ">GeoToken</p>
+                      </div>
+                      <div className="mb-[2.13vh] ">
+                        <h5 className="text-[#865DFF] font-bold text-lg flex items-center gap-2 ">
+                          TokenId
+                        </h5>
+                        <p className="text-lg text-[#B9B9B9]">
+                          {/* {parcel?.ownership?.emailAddress} */}
+                          {parcel?.owner.parcelNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className=" mb-[2.13vh] ">
+                        <h5 className="text-[#865DFF] font-bold text-lg">
+                          smart contract Address
+                        </h5>
+                        <p className="texttext-[#B9B9B9] ">
+                          {/* {parcel?.ownership?.placeOfBirth || "null"} */}
+                          {process.env.REACT_APP_NFT_CONTRACT_ADDRESS}
+                        </p>
+                      </div>
+
+                      <div className=" mb-[2.13vh] ">
+                        <h5 className="text-[#865DFF] font-bold text-lg">
+                          Token Symbol
+                        </h5>
+                        <p className="texttext-[#B9B9B9] ">GTK</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className=" mb-[2.13vh] ">
+                        <h5 className="text-[#865DFF] font-bold text-lg">
+                          token URI
+                        </h5>
+                        <p className="texttext-[#B9B9B9] ">
+                          {/* {parcel?.ownership?.placeOfBirth || "null"} */}
+                          {props.tokenURI}
+                        </p>
+                      </div>
+
+                     
                     </div>
                   </div>
                 </div>

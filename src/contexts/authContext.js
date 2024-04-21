@@ -30,13 +30,34 @@ export const AuthProvider = ({ children }) => {
 
   const web3 = new Web3(window.ethereum);
 
-  walletAddressRef.current = walletAddress;
+  walletAddressRef.current = localStorage.getItem("walletAddress");
 
   const changeAddress = () => {
-    walletAddressRef.current = walletAddress;
+    walletAddressRef.current = localStorage.getItem("walletAddress");
   };
 
-
+  const initUser = async (data) => {
+    setUser(data.user);
+    setToken(data.auth);
+    runLogoutTimer(data.auth.expiryInSeconds * 1000);
+    data.auth.expiryDate =
+      new Date().getTime() + data.auth.expiryInSeconds * 1000;
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...data,
+      })
+    );
+  };
+  function runLogoutTimer(time) {
+    setTimeout(() => {
+      logout();
+    }, time);
+  }
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
   const setAddress = (address) => {
     setWalletAddress(address);
   };
@@ -184,6 +205,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+ const getTokenURI = async (tokenId) => {
+   
+    try {
+      const result = await contractInstance2.methods
+        .tokenURI(tokenId)
+        .call();
+
+      handleStatus(STATE.SUCCESS);
+
+      return result;
+    } catch (error) {
+      console.error("Error fetching data from blockchain:", error);
+      handleStatus(STATE.ERROR);
+
+      throw error;
+    }
+  };
+
   const connectToWallet = async () => {
     setIsWalletConnected(false);
 
@@ -197,6 +236,8 @@ export const AuthProvider = ({ children }) => {
 
         setWalletAddress(selectedAccount);
 
+        localStorage.setItem("walletAddress", selectedAccount);
+
         setIsWalletConnected(true);
       } catch (error) {
         console.error("Error connecting to wallet:", error);
@@ -208,9 +249,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const disconnectWallet = async () => {
+    try {
+      // Check if the provider supports closing the connection
+      if (web3.currentProvider && web3.currentProvider.close) {
+        // Close the provider's connection
+        await web3.currentProvider.close();
+        console.log("Wallet disconnected successfully");
+  
+        setWalletAddress(null);
+        // Remove item from local storage (example: 'walletAddress')
+        walletAddressRef.current = null
+        localStorage.removeItem("walletAddress");
+        console.log("Wallet address removed from local storage");
+      } else {
+        console.warn("Provider does not support disconnecting");
+      }
+    } catch (error) {
+      console.error("Error disconnecting wallet:", error);
+      // Handle error appropriately
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
+        initUser,
+        logout,
+        user,
+        setUser,
+        userData,
+        setUserData,
         connectToWallet,
         walletAddress,
         setAddress,
@@ -229,7 +298,8 @@ export const AuthProvider = ({ children }) => {
         handleStatus,
         status,
         fetchMapData,
-        setWalletAddress
+        disconnectWallet,
+        getTokenURI
       }}
     >
       {children}

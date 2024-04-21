@@ -6,7 +6,7 @@ import {
   Polygon,
   Circle,
 } from "react-leaflet";
-import React, { useState} from "react";
+import React, { useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { calculatePolygonCenter } from "../utils/centerPointCoversion";
 import { STATE } from "../utils/stateConstants";
@@ -17,19 +17,14 @@ import { useNavigate } from "react-router-dom";
 
 export const BaseMap = (props) => {
   const [status, setStatus] = useState(STATE.IDLE);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   let convertedCoordinates;
- 
 
   convertedCoordinates = props.fetchedData.map((data) => {
     return data.landParcel.geographicCoordinates.map((cord) => {
       const point = Object.values(cord)[0];
-      const cartesianPoint = [point.px, point.py];
-      const geographicPoint = CartesianToGeographic(
-        cartesianPoint[0],
-        cartesianPoint[1]
-      );
+      const geographicPoint = [point.px, point.py];
       return {
         spatial: geographicPoint,
         nonSpatial: data,
@@ -58,8 +53,6 @@ export const BaseMap = (props) => {
   //   }
   // };
 
-
-
   return (
     <>
       {status === STATE.LOADING ? (
@@ -73,11 +66,10 @@ export const BaseMap = (props) => {
           >
             {/* Add the map tile layer */}
             <TileLayer
-              url="https://tile.openstreetmap.org/${z}/${x}/${y}.png"
-              attribution='Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
+              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             {/* Add a Polygon */}
-            <Circle center={epcotCenter} color="magenta" radius={10000} />
             {convertedCoordinates?.map((data, index) => {
               const cordCent = calculatePolygonCenter(
                 data.map((coord) => coord.spatial)
@@ -123,39 +115,30 @@ export const BaseMap = (props) => {
                             Token Information
                           </h6>
                           <table className="table-auto">
-                            <tbody>
+                            <tbody className="">
+                              <tr>
+                                <td className="text-[#865DFF] font-medium text-bold">
+                                  TokenName:
+                                </td>
+                                <td className="text-white ">GeoToken</td>
+                              </tr>
                               <tr>
                                 <td className="text-[#865DFF] font-medium text-bold">
                                   TokenId:
                                 </td>
-                                <td className="text-white truncate ">
-                                  {attr.nonSpatial.owner.fullName}
+                                <td className="text-white ">
+                                  {attr?.nonSpatial?.owner?.parcelNumber}
                                 </td>
                               </tr>
                               <tr>
                                 <td className="text-[#865DFF] font-medium text-bold">
-                                  Token Url:
+                                  Contract Address:
                                 </td>
                                 <td className="text-white">
-                                  {attr.nonSpatial.owner.address}
+                                  {process.env.REACT_APP_NFT_CONTRACT_ADDRESS}
                                 </td>
                               </tr>
-                              <tr>
-                                <td className="text-[#865DFF] font-medium text-bold ">
-                                  Date Minted:
-                                </td>
-                                <td className="text-white">
-                                  {attr.nonSpatial.owner.emailAddress}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="text-[#865DFF] font-medium text-bold">
-                                  Email:
-                                </td>
-                                <td className="text-white">
-                                  {attr.nonSpatial.owner.emailAddress}
-                                </td>
-                              </tr>
+
                               {/* Add more rows for additional information */}
                             </tbody>
                           </table>
@@ -169,16 +152,14 @@ export const BaseMap = (props) => {
                                   {" "}
                                   Asset Type:
                                 </td>
-                                <td className="text-white truncate mt-2">
-                                  Land Parcel
-                                </td>
+                                <td className="text-white mt-2">Land Parcel</td>
                               </tr>
 
                               <tr>
                                 <td className="text-[#865DFF] font-medium text-bold">
                                   ParcelId:
                                 </td>
-                                <td className="text-white truncate mt-2">
+                                <td className="text-white mt-2">
                                   {attr?.nonSpatial?.owner?.parcelNumber}
                                 </td>
                               </tr>
@@ -186,7 +167,7 @@ export const BaseMap = (props) => {
                                 <td className="text-[#865DFF] font-medium text-bold">
                                   Area:
                                 </td>
-                                <td className="text-white truncate mt-2">
+                                <td className="text-white mt-2">
                                   {attr?.nonSpatial?.owner?.value}
                                 </td>
                               </tr>
@@ -194,7 +175,7 @@ export const BaseMap = (props) => {
                                 <td className="text-[#865DFF] font-medium text-bold">
                                   Estimated Value:
                                 </td>
-                                <td className="text-white truncate mt-2">
+                                <td className="text-white mt-2">
                                   {attr?.nonSpatial?.owner?.area}
                                 </td>
                               </tr>
@@ -202,7 +183,7 @@ export const BaseMap = (props) => {
                                 <td className="text-[#865DFF] font-medium text-bold">
                                   Address:
                                 </td>
-                                <td className="text-white truncate mt-2">
+                                <td className="text-white  mt-2">
                                   {attr?.nonSpatial?.owner?.address}
                                 </td>
                               </tr>
@@ -219,7 +200,7 @@ export const BaseMap = (props) => {
                                   {" "}
                                   Latitude:
                                 </td>
-                                <td className=" text-white truncate mt-2">
+                                <td className=" text-white mt-2">
                                   {
                                     attr?.nonSpatial?.landParcel
                                       ?.geographicCoordinates[0]?.point1?.px
@@ -230,7 +211,7 @@ export const BaseMap = (props) => {
                                 <td className="text-[#865DFF] font-medium text-bold ">
                                   Longtitude:
                                 </td>
-                                <td className="text-white truncate mt-2">
+                                <td className="text-white mt-2">
                                   {
                                     attr?.nonSpatial?.landParcel
                                       ?.geographicCoordinates[0]?.point1?.py
@@ -268,7 +249,6 @@ export const BaseMap = (props) => {
   );
 };
 
-
 export const SingleBaseMap = ({ data }) => {
   const zoom = 24;
   const icon = L.icon({
@@ -299,8 +279,8 @@ export const SingleBaseMap = ({ data }) => {
     ],
   ];
   const convertedCooordinate = cartesianCoordinatesData.map((cord) => {
-    const geographicCoordinate = CartesianToGeographic(cord[0], cord[1]);
-    return geographicCoordinate;
+    const geographicPoint = [cord[0], cord[1]];
+    return geographicPoint;
   });
   const polygonCenter = calculatePolygonCenter(convertedCooordinate);
   const epcotCenter = [polygonCenter[1], polygonCenter[0]];
@@ -314,8 +294,8 @@ export const SingleBaseMap = ({ data }) => {
           className="h-full rounded-[40px]"
         >
           <TileLayer
-            url="https://tile.openstreetmap.org/${z}/${x}/${y}.png"
-            attribution="© OpenStreetMap contributors"
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           <Polygon
             positions={convertedCooordinate}

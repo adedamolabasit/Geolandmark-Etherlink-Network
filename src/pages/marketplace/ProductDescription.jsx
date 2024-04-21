@@ -50,10 +50,11 @@ function ProductDescription({
   const data = locationState.state;
 
   const navigate = useNavigate();
-  const { fetchDataByParcelId, mintGeoToken, handleStatus, status } = useAuth();
+  const { fetchDataByParcelId, mintGeoToken, handleStatus, status, getTokenURI } = useAuth();
   const [toggleYear, setToggleYear] = useState("Year 1");
   const [parcel, setParcel] = useState();
   const [tokenId, setTokenId] = useState();
+  const [tokenURI, setTokenURI] = useState();
   const dataRef = useRef();
 
   const {
@@ -66,7 +67,10 @@ function ProductDescription({
   useEffect(() => {
     const callData = async () => {
       const info = await fetchDataByParcelId(data.address, data.parcelNumber);
+      const tokenURI = await getTokenURI(data.parcelNumber);
+      console.log(tokenURI,"tokenURI")
       setParcel(info.data);
+      setTokenURI(tokenURI);
     };
     callData();
   }, [data]);
@@ -174,6 +178,7 @@ function ProductDescription({
             </div>
             <PropertyDetails
              parcel ={parcel}
+             tokenURI ={tokenURI}
             />
           </div>
         )}

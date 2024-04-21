@@ -49,7 +49,7 @@ function Navbar() {
         </Link>
       ) : (
         <div className="flex items-end gap-4 ">
-          {walletAddress !== null ? (
+          {address !== null ? (
             <div className="flex items-center gap-4 text-white">
               <Link to="/map">
                 <button className="w-[8.5vw] h-[3.3vh] text-base rounded-[7px] font-bold ">
@@ -71,7 +71,7 @@ function Navbar() {
               </Link>
 
               <p className="text-base font-bold text-cyan-600 cursor-pointer">
-                {truncateWalletAddress(walletAddress)}
+                {truncateWalletAddress(address)}
               </p>
               <img
                 src={ProfilePic}

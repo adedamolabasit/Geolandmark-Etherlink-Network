@@ -21,11 +21,11 @@ function App() {
     const accountWasChanged = (accounts) => {
       console.log(accounts, "account....");
       const newAddress = accounts[0];
-      auth.setWalletAddress(newAddress); // Update wallet address in your auth system
+      auth.changeAddress(newAddress); // Update wallet address in your auth system
     };
 
     const clearAccount = () => {
-      localStorage.removeItem("walletAddress");
+
       auth.setWalletAddress(null); // Clear wallet address in your auth system
       console.log("clearAccount");
     };
@@ -58,7 +58,11 @@ function App() {
         window.ethereum.off("disconnect", clearAccount);
       }
     };
-  }, [auth]);
+  }, [auth.setWalletAddress, auth.changeAddress]);
+
+  if(!auth.address) {
+    auth.connectToWallet()
+  }
 
   return (
     <AuthProvider>
@@ -88,7 +92,7 @@ function App() {
                 }
               />
               <Route
-                path="/dashboard/5"
+                path="/dashboard/2"
                 element={
                   <Dashboard>
                     <Settings />

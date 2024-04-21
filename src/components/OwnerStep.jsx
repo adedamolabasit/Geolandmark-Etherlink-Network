@@ -244,8 +244,8 @@ export const OwnerStep = ({ saveOwnerData, ownerCurrentState, nextStep }) => {
               placeholder="Legal Description"
               name="legalDescription"
               value={formik.values.legalDescription}
-              className={`${general_input_styles} h-[150px]`}
-            ></textarea>
+              className={`${general_input_styles} h-[20vh]`}
+            />
 
             {formik.touched.legalDescription &&
               formik.errors.legalDescription && (

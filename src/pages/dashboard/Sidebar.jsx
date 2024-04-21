@@ -31,7 +31,7 @@ const Sidebar = () => {
     } else if (id === 4) {
       navigate(`/dashboard/1`);
     } else if (id === 5) {
-      navigate(`/dashboard/5`);
+      navigate(`/dashboard/1`);
     } else if (id === 6) {
       navigate(`/dashboard/1`);
     }
@@ -52,13 +52,13 @@ const Sidebar = () => {
       id: 2,
       name: "Register a Land",
       icon: reg,
-      disable: false,
+      disable: true,
     },
     {
       id: 3,
       name: "Rent / Lease",
       icon: rent,
-      disable: false,
+      disable: true,
     },
     {
       id: 4,

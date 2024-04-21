@@ -35,7 +35,7 @@ function Header() {
 
       <div className="flex gap-[10px] items-center ">
         <div className="text-end">
-          <h1 className="font-semibold">{`${user?.firstName} ${user?.lastName}`}</h1>
+          <h1 className="font-semibold">Etherlink Testnet</h1>
           <p className="flex items-center gap-[7px] hover:underline hover:text-white/75 cursor-pointer text-[#009FBD]">
             {truncateWalletAddress(address)}
           </p>
