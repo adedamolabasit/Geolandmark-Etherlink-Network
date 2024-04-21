@@ -134,7 +134,7 @@ function PageSix() {
         </div>
       </div>
       <div className="flex items-center justify-center gap-[5.78vw] ">
-        <button onClick={handlePrev}>
+        <button>
           <img src={prev} alt="" />
         </button>
         <div className="flex items-center justify-center gap-2">

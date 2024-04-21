@@ -153,7 +153,7 @@ function PropertyDetails(props) {
                       </div>
                       <div className="flex flex-col ">
                         <h5 className="text-[#009FBD] font-medium text-sm flex items-center gap-2 ">
-                          EASTINGS
+                          LATITUDE
                         </h5>
                         <p className="text-lg text-[#B9B9B9] font-bold ">
                           {
@@ -182,7 +182,7 @@ function PropertyDetails(props) {
                       </div>
                       <div className="">
                         <h5 className="text-[#009FBD] font-medium text-sm flex items-center gap-2 ">
-                          NORTHINGS
+                          LONGITUDE
                         </h5>
                         <p className="text-lg text-[#B9B9B9] font-bold ">
                           {
